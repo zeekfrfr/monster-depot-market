@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base palette */
+  --white: #ffffff;
+  --off-white: #fafaf8;
+  --light-gray: #f2f2f0;
+  --mid-gray: #e0ded8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #8a8a8a;
+  --text-tertiary: #b8b6b0;
+
+  /* Mode accents */
+  --lift: #d4a853;
+  --social: #c4788a;
+  --ease: #8a9bb5;
+  --focus: #7baf8e;
+  --drive: #c47a5a;
+
+  /* Type scale */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+  --text-4xl: 64px;
+}
+
+html,
+body {
+  background-color: var(--off-white);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownSheet {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.page-enter {
+  animation: fadeIn 200ms ease forwards;
+}
+
+.page-exit {
+  animation: fadeOut 200ms ease forwards;
+}
+
+.sheet-enter {
+  animation: slideUpSheet 300ms ease-out forwards;
+}
+
+.sheet-exit {
+  animation: slideDownSheet 250ms ease-in forwards;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background-color: var(--mid-gray);
+  width: 100%;
+}
+
+/* Ingredient accordion height transition */
+.accordion-content {
+  overflow: hidden;
+  transition: height 250ms ease;
+}
