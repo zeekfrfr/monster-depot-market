@@ -68,25 +68,36 @@ function ModeButton({
   mode: ModeProduct
   onClick: () => void
 }) {
-  const [hovered, setHovered] = useState(false)
+  const [active, setActive] = useState(false)
 
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onPointerDown={() => setActive(true)}
+      onPointerUp={() => setActive(false)}
+      onPointerLeave={() => setActive(false)}
+      onPointerCancel={() => setActive(false)}
       style={{
-        background: 'none',
-        border: 'none',
+        background: active ? `${mode.accent}18` : 'transparent',
+        backdropFilter: active ? 'blur(16px) saturate(180%)' : 'none',
+        WebkitBackdropFilter: active ? 'blur(16px) saturate(180%)' : 'none',
+        border: `1px solid ${active ? mode.accent + '50' : 'transparent'}`,
+        borderRadius: '14px',
+        boxShadow: active
+          ? `0 4px 32px ${mode.accent}28, 0 0 0 1px ${mode.accent}18, inset 0 1px 0 ${mode.accent}30`
+          : 'none',
         cursor: 'pointer',
         fontFamily: 'var(--font-cormorant)',
         fontSize: 'var(--text-3xl)',
         fontWeight: 300,
         letterSpacing: '0.15em',
-        color: hovered ? mode.accent : 'var(--text-primary)',
-        transition: 'color 150ms ease',
+        color: active ? mode.accent : 'var(--text-primary)',
+        transition: 'color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
         lineHeight: 1,
-        padding: '0',
+        padding: '14px 44px',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        touchAction: 'manipulation',
       }}
     >
       {mode.name}
