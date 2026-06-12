@@ -57,6 +57,22 @@ export default function LandingPage() {
           />
         ))}
       </div>
+
+      <p
+        style={{
+          fontFamily: 'var(--font-cormorant)',
+          fontSize: 'var(--text-xl)',
+          fontWeight: 300,
+          color: 'var(--text-tertiary)',
+          letterSpacing: '0.03em',
+          lineHeight: 1.6,
+          textAlign: 'center',
+          maxWidth: '520px',
+          marginTop: '96px',
+        }}
+      >
+        The session already has your taste buds paying attention. We just gave them something worth it.
+      </p>
     </div>
   )
 }

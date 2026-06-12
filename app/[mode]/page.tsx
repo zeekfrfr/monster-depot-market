@@ -21,6 +21,6 @@ export function generateMetadata({ params }: Props) {
   if (!mode) return {}
   return {
     title: `${mode.name} — Monster Depot`,
-    description: mode.tagline,
+    description: mode.oneliner,
   }
 }

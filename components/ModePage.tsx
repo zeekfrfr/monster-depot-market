@@ -111,18 +111,46 @@ export default function ModePage({ mode }: ModePageProps) {
         {mode.name}
       </h1>
 
-      {/* Tagline */}
+      {/* One-liner */}
       <p
         style={{
           fontSize: 'var(--text-base)',
           fontWeight: 300,
           color: 'var(--text-secondary)',
           letterSpacing: '-0.01em',
-          marginBottom: '40px',
+          marginBottom: '28px',
         }}
       >
-        {mode.tagline}
+        {mode.oneliner}
       </p>
+
+      {/* Feeling */}
+      <div style={{ marginBottom: '40px' }}>
+        <p
+          style={{
+            fontSize: 'var(--text-xs)',
+            fontWeight: 400,
+            color: 'var(--text-tertiary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: '4px',
+          }}
+        >
+          Feeling
+        </p>
+        <p
+          style={{
+            fontFamily: 'var(--font-cormorant)',
+            fontSize: 'var(--text-2xl)',
+            fontWeight: 300,
+            letterSpacing: '0.06em',
+            color: mode.accent,
+            lineHeight: 1.2,
+          }}
+        >
+          {mode.feeling}
+        </p>
+      </div>
 
       <div
         style={{

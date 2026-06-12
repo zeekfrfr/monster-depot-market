@@ -16,7 +16,8 @@ export interface Flavor {
 export interface ModeProduct {
   name: string
   slug: string
-  tagline: string
+  oneliner: string
+  feeling: string
   accent: string
   flavors: Flavor[]
   formats: {
@@ -41,7 +42,8 @@ export const MODES: ModeProduct[] = [
   {
     name: 'LIFT',
     slug: 'lift',
-    tagline: 'For when the day begins.',
+    oneliner: 'For creativity, curiosity, and elevated moments.',
+    feeling: 'Inspired.',
     accent: '#D4A853',
     flavors: [
       { name: 'Strawberry Lemonade', pairings: ['Sparkling water', 'Coconut water', 'Basil + soda', 'Fresh lemonade'] },
@@ -64,7 +66,8 @@ export const MODES: ModeProduct[] = [
   {
     name: 'SOCIAL',
     slug: 'social',
-    tagline: 'For conversations and nights out.',
+    oneliner: 'For conversations, events, and nights out.',
+    feeling: 'Connected.',
     accent: '#C4788A',
     flavors: [
       { name: 'Rose Hibiscus Lemonade', pairings: ['Sparkling water', 'Prosecco-style N/A bubbly', 'Grapefruit soda', 'Tonic'] },
@@ -85,7 +88,8 @@ export const MODES: ModeProduct[] = [
   {
     name: 'EASE',
     slug: 'ease',
-    tagline: 'For winding down.',
+    oneliner: 'For slowing down and settling in.',
+    feeling: 'Relaxed.',
     accent: '#8A9BB5',
     flavors: [
       { name: 'Blackberry Lavender', pairings: ['Warm water', 'Chamomile tea', 'Still water', 'Honey + hot water'] },
@@ -106,7 +110,8 @@ export const MODES: ModeProduct[] = [
   {
     name: 'FOCUS',
     slug: 'focus',
-    tagline: 'For locking in.',
+    oneliner: 'For clarity, concentration, and getting in the zone.',
+    feeling: 'Locked in.',
     accent: '#7BAF8E',
     flavors: [
       { name: 'Green Apple Yuzu', pairings: ['Cold green tea', 'Sparkling water', 'Still water', 'Matcha + cold water'] },
@@ -127,7 +132,8 @@ export const MODES: ModeProduct[] = [
   {
     name: 'DRIVE',
     slug: 'drive',
-    tagline: 'For whatever comes next.',
+    oneliner: 'For momentum, movement, and what\'s next.',
+    feeling: 'Motivated.',
     accent: '#A03040',
     flavors: [
       { name: 'Blood Orange', pairings: ['Sparkling water', 'Ginger beer', 'Tonic', 'Grapefruit soda'] },
