@@ -1,39 +1,24 @@
 export const metadata = {
-  title: 'Terms of Service — Monster Depot',
+  title: 'Privacy Policy — Monster Depot',
 }
 
-export default function Terms() {
+export default function PrivacyPolicy() {
   return (
     <div style={page}>
-      <h1 style={heading}>Terms of Service</h1>
-
+      <h1 style={heading}>Privacy Policy</h1>
       <p style={body}>
-        By placing an order with Monster Depot, you agree to the following terms.
+        We collect only what&apos;s needed to fulfill your order: name, email, shipping address,
+        and order details. We do not sell your information.
       </p>
-
       <p style={body}>
-        All purchases are subject to our{' '}
-        <a href="/refunds" style={link}>Refund Policy</a> and{' '}
-        <a href="/shipping" style={link}>Shipping Policy</a>. By completing checkout you
-        confirm you have read and accept both.
+        Payment is processed securely by Square — we never store card numbers.
       </p>
-
       <p style={body}>
-        You confirm that the shipping information provided is accurate. Monster Depot
-        Holdings LLC is not responsible for orders that cannot be delivered due to
-        incorrect or incomplete addresses.
-      </p>
-
-      <p style={body}>
-        Monster Depot Holdings LLC&apos;s liability is limited to the value of the product
-        purchased. We are not liable for indirect, incidental, or consequential damages.
-      </p>
-
-      <p style={body}>
-        Questions:{' '}
+        Contact{' '}
         <a href="mailto:monsterdepotmarketing@gmail.com" style={link}>
           monsterdepotmarketing@gmail.com
-        </a>
+        </a>{' '}
+        with any privacy requests.
       </p>
     </div>
   )

@@ -14,6 +14,8 @@ interface ModePageProps {
   mode: ModeProduct
 }
 
+const FDA_DISCLAIMER = 'These statements have not been evaluated by the Food and Drug Administration. These products are not intended to diagnose, treat, cure, or prevent any disease.'
+
 export default function ModePage({ mode }: ModePageProps) {
   const router = useRouter()
   const { addItem } = useCart()
@@ -24,6 +26,7 @@ export default function ModePage({ mode }: ModePageProps) {
   const [arrowHovered, setArrowHovered] = useState(false)
   const [added, setAdded] = useState(false)
   const [priceKey, setPriceKey] = useState(0)
+  const [whyOpen, setWhyOpen] = useState(false)
 
   const price = getPrice(mode, format, size)
 
@@ -149,13 +152,7 @@ export default function ModePage({ mode }: ModePageProps) {
         </p>
       </div>
 
-      <div
-        style={{
-          height: '1px',
-          backgroundColor: 'var(--mid-gray)',
-          marginBottom: '40px',
-        }}
-      />
+      <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', marginBottom: '40px' }} />
 
       {/* Format */}
       <p
@@ -175,13 +172,7 @@ export default function ModePage({ mode }: ModePageProps) {
         onSelect={handleFormatChange}
       />
 
-      <div
-        style={{
-          height: '1px',
-          backgroundColor: 'var(--mid-gray)',
-          margin: '40px 0',
-        }}
-      />
+      <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
 
       {/* Flavors */}
       <FlavorSelector
@@ -191,7 +182,7 @@ export default function ModePage({ mode }: ModePageProps) {
         onSelect={setFlavor}
       />
 
-      {/* Mix it with — stick only, sits directly under flavor */}
+      {/* Mix it with — stick only */}
       {format === 'stick' && (() => {
         const pairings = mode.flavors.find(f => f.name === flavor)?.pairings ?? []
         return (
@@ -223,13 +214,96 @@ export default function ModePage({ mode }: ModePageProps) {
         )
       })()}
 
+      {/* Why it works — progressive disclosure */}
+      <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
+
+      <button
+        onClick={() => setWhyOpen(!whyOpen)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          width: '100%',
+          padding: 0,
+          fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-tertiary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+          }}
+        >
+          Why it works
+        </span>
+        <span
+          style={{
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-tertiary)',
+            display: 'inline-block',
+            transform: whyOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 250ms ease',
+          }}
+        >
+          ↓
+        </span>
+      </button>
+
       <div
         style={{
-          height: '1px',
-          backgroundColor: 'var(--mid-gray)',
-          margin: '40px 0',
+          display: 'grid',
+          gridTemplateRows: whyOpen ? '1fr' : '0fr',
+          transition: 'grid-template-rows 250ms ease',
         }}
-      />
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <div style={{ paddingTop: '24px' }}>
+            <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', marginBottom: '24px' }} />
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 300,
+                color: 'var(--text-secondary)',
+                lineHeight: 1.75,
+                letterSpacing: '-0.01em',
+                marginBottom: '28px',
+              }}
+            >
+              {mode.why_it_works}
+            </p>
+            <p
+              style={{
+                fontSize: 'var(--text-xs)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--text-tertiary)',
+                marginBottom: '8px',
+              }}
+            >
+              When to take it
+            </p>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 300,
+                color: 'var(--text-secondary)',
+                lineHeight: 1.75,
+                letterSpacing: '-0.01em',
+                paddingBottom: '8px',
+              }}
+            >
+              {mode.when_to_take}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
 
       {/* Size */}
       <div style={{ marginBottom: '24px' }}>
@@ -302,16 +376,24 @@ export default function ModePage({ mode }: ModePageProps) {
         </button>
       </div>
 
-      <div
-        style={{
-          height: '1px',
-          backgroundColor: 'var(--mid-gray)',
-          margin: '40px 0',
-        }}
-      />
+      <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
 
       {/* What's inside */}
       <IngredientAccordion actives={mode.actives} />
+
+      {/* FDA disclaimer */}
+      <p
+        style={{
+          fontSize: 'var(--text-xs)',
+          color: 'var(--text-tertiary)',
+          textAlign: 'center',
+          lineHeight: 1.6,
+          marginTop: '32px',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {FDA_DISCLAIMER}
+      </p>
     </div>
   )
 }
