@@ -6,11 +6,7 @@ import { MODES, type ModeProduct } from '@/lib/products'
 
 export default function LandingPage() {
   const router = useRouter()
-  const [fading, setFading] = useState(false)
-
-  const handleSelect = async (slug: string) => {
-    setFading(true)
-    await new Promise((r) => setTimeout(r, 200))
+  const handleSelect = (slug: string) => {
     router.push(`/${slug}`)
   }
 
@@ -23,8 +19,6 @@ export default function LandingPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '64px 24px',
-        opacity: fading ? 0 : 1,
-        transition: 'opacity 200ms ease',
       }}
     >
       <p
