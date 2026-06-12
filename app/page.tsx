@@ -29,6 +29,21 @@ export default function LandingPage() {
     >
       <p
         style={{
+          fontFamily: 'var(--font-cormorant)',
+          fontSize: 'var(--text-xl)',
+          fontWeight: 300,
+          color: 'var(--brand-purple)',
+          letterSpacing: '0.06em',
+          textAlign: 'center',
+          lineHeight: 1,
+          marginBottom: '48px',
+        }}
+      >
+        Made for the session.
+      </p>
+
+      <p
+        style={{
           fontSize: 'var(--text-2xl)',
           fontWeight: 300,
           color: 'var(--text-secondary)',
