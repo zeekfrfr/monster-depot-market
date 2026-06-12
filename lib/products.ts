@@ -8,12 +8,17 @@ export interface Active {
   amount: string
 }
 
+export interface Flavor {
+  name: string
+  pairings: string[]
+}
+
 export interface ModeProduct {
   name: string
   slug: string
   tagline: string
   accent: string
-  flavors: string[]
+  flavors: Flavor[]
   formats: {
     stick: Record<StickSize, number>
     rtd: Record<RTDSize, number>
@@ -38,7 +43,11 @@ export const MODES: ModeProduct[] = [
     slug: 'lift',
     tagline: 'For when the day begins.',
     accent: '#D4A853',
-    flavors: ['Strawberry Lemonade', 'Mango Sunrise', 'Pineapple Passionfruit'],
+    flavors: [
+      { name: 'Strawberry Lemonade', pairings: ['Sparkling water', 'Coconut water', 'Basil + soda', 'Fresh lemonade'] },
+      { name: 'Mango Sunrise',       pairings: ['Coconut water', 'Sparkling water', 'Tajín rim + soda', 'Orange juice'] },
+      { name: 'Pineapple Passionfruit', pairings: ['Coconut water', 'Ginger beer', 'Sparkling water', 'Lime soda'] },
+    ],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },
       rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
@@ -57,7 +66,11 @@ export const MODES: ModeProduct[] = [
     slug: 'social',
     tagline: 'For conversations and nights out.',
     accent: '#C4788A',
-    flavors: ['Rose Hibiscus Lemonade', 'Berry Mojito', 'Citrus Spritz'],
+    flavors: [
+      { name: 'Rose Hibiscus Lemonade', pairings: ['Sparkling water', 'Prosecco-style N/A bubbly', 'Grapefruit soda', 'Tonic'] },
+      { name: 'Berry Mojito',           pairings: ['Sparkling water + fresh mint', 'Lime soda', 'Cucumber water', 'Club soda'] },
+      { name: 'Citrus Spritz',          pairings: ['Tonic water', 'Grapefruit soda', 'Sparkling water', 'Elderflower soda'] },
+    ],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },
       rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
@@ -74,7 +87,11 @@ export const MODES: ModeProduct[] = [
     slug: 'ease',
     tagline: 'For winding down.',
     accent: '#8A9BB5',
-    flavors: ['Blackberry Lavender', 'Peach Chamomile', 'Tart Cherry'],
+    flavors: [
+      { name: 'Blackberry Lavender', pairings: ['Warm water', 'Chamomile tea', 'Still water', 'Honey + hot water'] },
+      { name: 'Peach Chamomile',     pairings: ['Hot water', 'Chamomile tea', 'Warm oat milk', 'Still water'] },
+      { name: 'Tart Cherry',         pairings: ['Still water', 'Warm water', 'Hibiscus tea', 'Sparkling water'] },
+    ],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },
       rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
@@ -91,7 +108,11 @@ export const MODES: ModeProduct[] = [
     slug: 'focus',
     tagline: 'For locking in.',
     accent: '#7BAF8E',
-    flavors: ['Green Apple Yuzu', 'White Peach', 'Cucumber Melon'],
+    flavors: [
+      { name: 'Green Apple Yuzu', pairings: ['Cold green tea', 'Sparkling water', 'Still water', 'Matcha + cold water'] },
+      { name: 'White Peach',      pairings: ['Cold white tea', 'Still water', 'Green tea', 'Sparkling water'] },
+      { name: 'Cucumber Melon',   pairings: ['Cold water', 'Cucumber water', 'Sparkling water', 'Coconut water'] },
+    ],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },
       rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
@@ -108,7 +129,11 @@ export const MODES: ModeProduct[] = [
     slug: 'drive',
     tagline: 'For whatever comes next.',
     accent: '#A03040',
-    flavors: ['Blood Orange', 'Cherry Lime', 'Dragonfruit'],
+    flavors: [
+      { name: 'Blood Orange', pairings: ['Sparkling water', 'Ginger beer', 'Tonic', 'Grapefruit soda'] },
+      { name: 'Cherry Lime',  pairings: ['Lime soda', 'Sparkling water', 'Cola-style soda', 'Club soda'] },
+      { name: 'Dragonfruit',  pairings: ['Coconut water', 'Lychee soda', 'Sparkling water', 'Lime soda'] },
+    ],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },
       rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },

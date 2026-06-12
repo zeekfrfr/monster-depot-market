@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import type { Flavor } from '@/lib/products'
 
 interface FlavorSelectorProps {
-  flavors: string[]
+  flavors: Flavor[]
   selected: string
   accent: string
-  onSelect: (flavor: string) => void
+  onSelect: (name: string) => void
 }
 
 export default function FlavorSelector({
@@ -20,14 +21,14 @@ export default function FlavorSelector({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
       {flavors.map((flavor) => {
-        const isSelected = flavor === selected
-        const isActive = activeItem === flavor
+        const isSelected = flavor.name === selected
+        const isActive = activeItem === flavor.name
         return (
           <button
-            key={flavor}
-            onClick={() => onSelect(flavor)}
-            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActiveItem(flavor) }}
-            onPointerDown={() => setActiveItem(flavor)}
+            key={flavor.name}
+            onClick={() => onSelect(flavor.name)}
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActiveItem(flavor.name) }}
+            onPointerDown={() => setActiveItem(flavor.name)}
             onPointerUp={(e) => { if (e.pointerType === 'touch') setActiveItem(null) }}
             onPointerLeave={() => setActiveItem(null)}
             onPointerCancel={() => setActiveItem(null)}
@@ -63,7 +64,7 @@ export default function FlavorSelector({
                 transition: 'opacity 150ms ease',
               }}
             />
-            {flavor}
+            {flavor.name}
           </button>
         )
       })}

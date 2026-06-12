@@ -18,7 +18,7 @@ export default function ModePage({ mode }: ModePageProps) {
   const router = useRouter()
   const { addItem } = useCart()
 
-  const [flavor, setFlavor] = useState(mode.flavors[0])
+  const [flavor, setFlavor] = useState(mode.flavors[0].name)
   const [format, setFormat] = useState<Format>('stick')
   const [size, setSize] = useState<AnySize>('single')
   const [arrowHovered, setArrowHovered] = useState(false)
@@ -244,6 +244,38 @@ export default function ModePage({ mode }: ModePageProps) {
           )}
         </button>
       </div>
+
+      {/* Mix it with — stick pack only */}
+      {format === 'stick' && (() => {
+        const pairings = mode.flavors.find(f => f.name === flavor)?.pairings ?? []
+        return (
+          <>
+            <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
+            <p
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: '12px',
+              }}
+            >
+              Mix it with
+            </p>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 300,
+                color: 'var(--text-secondary)',
+                letterSpacing: '-0.01em',
+                lineHeight: 1.6,
+              }}
+            >
+              {pairings.join(' · ')}
+            </p>
+          </>
+        )
+      })()}
 
       <div
         style={{
