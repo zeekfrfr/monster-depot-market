@@ -1,10 +1,23 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useCart } from '@/lib/cart'
+import { getSupabase } from '@/lib/supabase'
 
 export default function Nav() {
   const { itemCount, openCart } = useCart()
+  const [signedIn, setSignedIn] = useState(false)
+
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+    supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(!!session?.user)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   return (
     <header
@@ -28,6 +41,30 @@ export default function Nav() {
         Monster Depot
       </Link>
 
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      {signedIn && (
+        <Link
+          href="/account"
+          aria-label="Account"
+          style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="9" cy="6" r="3.25" stroke="currentColor" strokeWidth="1.25" />
+            <path
+              d="M3.5 15.5c.7-2.9 2.9-4.5 5.5-4.5s4.8 1.6 5.5 4.5"
+              stroke="currentColor"
+              strokeWidth="1.25"
+              strokeLinecap="round"
+            />
+          </svg>
+        </Link>
+      )}
       <button
         onClick={openCart}
         aria-label={`Cart${itemCount > 0 ? `, ${itemCount} items` : ''}`}
@@ -69,6 +106,7 @@ export default function Nav() {
           <span style={{ color: 'var(--text-primary)' }}>{itemCount}</span>
         )}
       </button>
+      </div>
     </header>
   )
 }

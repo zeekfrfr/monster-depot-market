@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useCart } from '@/lib/cart'
 import { initSquare } from '@/lib/square'
+import { getSupabase } from '@/lib/supabase'
 
 interface PaymentSheetProps {
   total: number
@@ -85,6 +86,15 @@ export default function PaymentSheet({ total, itemCount, onBack, onSuccess }: Pa
       return
     }
 
+    // Attach user_id when a logged-in user is checking out (guests stay null)
+    let userId: string | undefined
+    try {
+      const { data } = (await getSupabase()?.auth.getUser()) ?? { data: { user: null } }
+      userId = data.user?.id
+    } catch {
+      userId = undefined
+    }
+
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -92,6 +102,7 @@ export default function PaymentSheet({ total, itemCount, onBack, onSuccess }: Pa
         body: JSON.stringify({
           token: result.token,
           email: shipping.email,
+          userId,
           cartItems: items,
           shipping: {
             name: shipping.name,
@@ -273,7 +284,7 @@ export default function PaymentSheet({ total, itemCount, onBack, onSuccess }: Pa
             By placing your order you agree to our{' '}
             <a href="/terms" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>Terms</a>
             {' '}and{' '}
-            <a href="/refund-policy" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>Refund Policy</a>.
+            <a href="/refunds" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>Refund Policy</a>.
           </p>
         </div>
       )}

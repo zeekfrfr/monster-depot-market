@@ -4,7 +4,7 @@ const CORS = {
 }
 
 const POSTMARK_API = 'https://api.postmarkapp.com/email'
-const FROM_ADDRESS = 'orders@monsterdepotmarket.com'
+const FROM_ADDRESS = 'Monster Depot <orders@monsterdepotmarket.com>'
 const ADMIN_EMAIL = 'monsterdepotmarketing@gmail.com'
 
 interface OrderItem {

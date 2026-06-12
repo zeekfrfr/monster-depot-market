@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
+import { getSupabase } from '@/lib/supabase'
 import PaymentSheet from './PaymentSheet'
 
 export default function CartSheet() {
@@ -328,9 +329,46 @@ function OrderConfirmation({
   const router = useRouter()
   const shortId = orderId.slice(-8).toUpperCase()
 
+  // Post-checkout soft account creation — never a wall, always skippable
+  const [showPassword, setShowPassword] = useState(false)
+  const [password, setPassword] = useState('')
+  const [optIn, setOptIn] = useState(true)
+  const [signupState, setSignupState] = useState<'idle' | 'loading' | 'sent' | 'exists' | 'error'>('idle')
+
+  const supabase = getSupabase()
+
   const handleClose = () => {
     onClose()
     router.push('/')
+  }
+
+  const handleSignup = async () => {
+    if (!supabase || password.length < 8) return
+    setSignupState('loading')
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account&order_id=${orderId}&opt_in=${optIn ? '1' : '0'}`,
+      },
+    })
+    if (error) {
+      setSignupState('error')
+      return
+    }
+    // Supabase returns a user with no identities when the email is already registered
+    if (data.user && data.user.identities?.length === 0) {
+      setSignupState('exists')
+      return
+    }
+    setSignupState('sent')
+  }
+
+  const mutedText: React.CSSProperties = {
+    fontSize: 'var(--text-sm)',
+    fontWeight: 300,
+    color: 'var(--text-secondary)',
+    letterSpacing: '-0.01em',
   }
 
   return (
@@ -342,6 +380,7 @@ function OrderConfirmation({
         alignItems: 'center',
         textAlign: 'center',
         gap: 0,
+        overflowY: 'auto',
       }}
     >
       <p
@@ -370,15 +409,7 @@ function OrderConfirmation({
         #{shortId}
       </p>
 
-      <p
-        style={{
-          fontSize: 'var(--text-sm)',
-          fontWeight: 300,
-          color: 'var(--text-secondary)',
-          letterSpacing: '-0.01em',
-          marginBottom: '4px',
-        }}
-      >
+      <p style={{ ...mutedText, marginBottom: '4px' }}>
         Ships within 3–5 business days.
       </p>
 
@@ -388,11 +419,128 @@ function OrderConfirmation({
           fontWeight: 300,
           color: 'var(--text-tertiary)',
           letterSpacing: '-0.01em',
-          marginBottom: '40px',
+          marginBottom: '36px',
         }}
       >
         A confirmation has been sent to {email}.
       </p>
+
+      {supabase && (
+        <>
+          <div style={{ width: '100%', maxWidth: '320px', height: '1px', backgroundColor: 'var(--mid-gray)', marginBottom: '32px' }} />
+
+          {signupState === 'sent' ? (
+            <p style={{ ...mutedText, marginBottom: '36px', lineHeight: 1.6 }}>
+              Check your email to confirm your account.
+              <br />
+              Your order will be waiting in there.
+            </p>
+          ) : signupState === 'exists' ? (
+            <p style={{ ...mutedText, marginBottom: '36px', lineHeight: 1.6 }}>
+              You already have an account.{' '}
+              <a
+                href="/login"
+                style={{ color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+              >
+                Sign in to track this order →
+              </a>
+            </p>
+          ) : (
+            <>
+              <p style={{ ...mutedText, marginBottom: '20px' }}>
+                Want to track this order and save your info?
+              </p>
+
+              {showPassword ? (
+                <div style={{ width: '100%', maxWidth: '320px', marginBottom: '36px' }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      marginBottom: '16px',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={optIn}
+                      onChange={(e) => setOptIn(e.target.checked)}
+                      style={{ accentColor: '#1A1A1A', width: '15px', height: '15px', flexShrink: 0 }}
+                    />
+                    Send me new flavors and session drops.
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Password (8+ characters)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      borderBottom: '1px solid var(--mid-gray)',
+                      borderRadius: 0,
+                      padding: '12px 0',
+                      fontSize: '15px',
+                      fontFamily: 'inherit',
+                      background: 'transparent',
+                      color: 'var(--text-primary)',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      marginBottom: '20px',
+                    }}
+                  />
+                  {signupState === 'error' && (
+                    <p style={{ fontSize: 'var(--text-sm)', color: '#c0392b', marginBottom: '16px' }}>
+                      Could not create account. Please try again.
+                    </p>
+                  )}
+                  <button
+                    onClick={handleSignup}
+                    disabled={signupState === 'loading' || password.length < 8}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      backgroundColor: signupState === 'loading' || password.length < 8 ? 'var(--mid-gray)' : '#1A1A1A',
+                      color: signupState === 'loading' || password.length < 8 ? 'var(--text-secondary)' : '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      cursor: signupState === 'loading' || password.length < 8 ? 'default' : 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'background-color 150ms ease',
+                    }}
+                  >
+                    {signupState === 'loading' ? 'Creating…' : 'Create account →'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowPassword(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--text-primary)',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '3px',
+                    fontFamily: 'inherit',
+                    marginBottom: '36px',
+                  }}
+                >
+                  Create a password →
+                </button>
+              )}
+            </>
+          )}
+        </>
+      )}
 
       <button
         onClick={handleClose}
@@ -408,7 +556,7 @@ function OrderConfirmation({
           letterSpacing: '-0.01em',
         }}
       >
-        Close
+        {signupState === 'sent' || signupState === 'exists' ? 'Close' : 'or continue without an account'}
       </button>
     </div>
   )

@@ -48,11 +48,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   // Parse body
-  let token: string, cartItems: CartItem[], shipping: Shipping, email: string
+  let token: string, cartItems: CartItem[], shipping: Shipping, email: string, userId: string | undefined
   try {
-    ;({ token, cartItems, shipping, email } = await req.json())
+    ;({ token, cartItems, shipping, email, userId } = await req.json())
   } catch {
     return err(400, 'Invalid request body.')
+  }
+
+  // userId is optional (guest checkout leaves it undefined); reject junk values
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (userId !== undefined && (typeof userId !== 'string' || !UUID_RE.test(userId))) {
+    userId = undefined
   }
 
   // Validate inputs
@@ -147,10 +153,13 @@ Deno.serve(async (req) => {
     unit_price_cents: priceMap.get(`${item.mode}-${item.format}-${item.size}`)!,
   }))
 
-  // Write order — service-role key bypasses RLS
+  // Write order — service-role key bypasses RLS.
+  // user_id only included when a logged-in user checked out, so guest
+  // inserts keep working even before the user_id column migration runs.
   const { data: order, error: insertErr } = await supabase
     .from('orders')
     .insert({
+      ...(userId ? { user_id: userId } : {}),
       email,
       items: orderItems,
       total: totalCents,
