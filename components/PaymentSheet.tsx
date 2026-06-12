@@ -8,7 +8,7 @@ interface PaymentSheetProps {
   total: number
   itemCount: number
   onBack: () => void
-  onSuccess: (orderId: string) => void
+  onSuccess: (orderId: string, email: string) => void
 }
 
 interface SquareCard {
@@ -110,7 +110,7 @@ export default function PaymentSheet({ total, itemCount, onBack, onSuccess }: Pa
         return
       }
       clearCart()
-      onSuccess(data.orderId)
+      onSuccess(data.orderId, shipping.email)
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart'
 import PaymentSheet from './PaymentSheet'
 
@@ -8,7 +9,7 @@ export default function CartSheet() {
   const { items, removeItem, isOpen, closeCart, total, itemCount } = useCart()
   const [isClosing, setIsClosing] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
-  const [orderConfirmed, setOrderConfirmed] = useState<string | null>(null)
+  const [orderConfirmed, setOrderConfirmed] = useState<{ orderId: string; email: string } | null>(null)
 
   const handleClose = () => {
     setIsClosing(true)
@@ -20,8 +21,8 @@ export default function CartSheet() {
     }, 250)
   }
 
-  const handleOrderSuccess = (orderId: string) => {
-    setOrderConfirmed(orderId)
+  const handleOrderSuccess = (orderId: string, email: string) => {
+    setOrderConfirmed({ orderId, email })
     setShowPayment(false)
   }
 
@@ -66,7 +67,11 @@ export default function CartSheet() {
             onSuccess={handleOrderSuccess}
           />
         ) : orderConfirmed ? (
-          <OrderConfirmation orderId={orderConfirmed} onClose={handleClose} />
+          <OrderConfirmation
+            orderId={orderConfirmed.orderId}
+            email={orderConfirmed.email}
+            onClose={handleClose}
+          />
         ) : (
           <CartContents
             items={items}
@@ -235,12 +240,10 @@ function CartContents({
                     fontFamily: 'inherit',
                   }}
                   onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.color =
-                      'var(--text-primary)'
+                    ;(e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'
                   }}
                   onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.color =
-                      'var(--text-tertiary)'
+                    ;(e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'
                   }}
                   aria-label={`Remove ${item.flavor}`}
                 >
@@ -268,12 +271,7 @@ function CartContents({
               marginBottom: '16px',
             }}
           >
-            <span
-              style={{
-                fontSize: 'var(--text-base)',
-                color: 'var(--text-secondary)',
-              }}
-            >
+            <span style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)' }}>
               Subtotal
             </span>
             <span
@@ -320,62 +318,94 @@ function CartContents({
 
 function OrderConfirmation({
   orderId,
+  email,
   onClose,
 }: {
   orderId: string
+  email: string
   onClose: () => void
 }) {
+  const router = useRouter()
+  const shortId = orderId.slice(-8).toUpperCase()
+
+  const handleClose = () => {
+    onClose()
+    router.push('/')
+  }
+
   return (
     <div
       style={{
-        padding: '40px 24px 48px',
-        textAlign: 'center',
+        padding: '56px 32px 48px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '12px',
+        textAlign: 'center',
+        gap: 0,
       }}
     >
       <p
         style={{
-          fontSize: 'var(--text-sm)',
-          color: 'var(--text-tertiary)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-        }}
-      >
-        Order confirmed
-      </p>
-      <p
-        style={{
-          fontSize: 'var(--text-xl)',
-          fontWeight: 300,
-          color: 'var(--text-primary)',
           fontFamily: 'var(--font-cormorant)',
+          fontSize: 'var(--text-3xl)',
+          fontWeight: 300,
+          letterSpacing: '0.1em',
+          color: 'var(--text-primary)',
+          lineHeight: 1.1,
+          marginBottom: '28px',
         }}
       >
-        You&apos;re all set.
+        Order confirmed.
       </p>
+
       <p
         style={{
           fontSize: 'var(--text-sm)',
+          fontWeight: 400,
           color: 'var(--text-secondary)',
-          marginTop: '4px',
+          letterSpacing: '-0.01em',
+          marginBottom: '8px',
         }}
       >
-        Order #{orderId.slice(-8).toUpperCase()}
+        #{shortId}
       </p>
-      <button
-        onClick={onClose}
+
+      <p
         style={{
-          marginTop: '24px',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 300,
+          color: 'var(--text-secondary)',
+          letterSpacing: '-0.01em',
+          marginBottom: '4px',
+        }}
+      >
+        Ships within 3–5 business days.
+      </p>
+
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          fontWeight: 300,
+          color: 'var(--text-tertiary)',
+          letterSpacing: '-0.01em',
+          marginBottom: '40px',
+        }}
+      >
+        A confirmation has been sent to {email}.
+      </p>
+
+      <button
+        onClick={handleClose}
+        style={{
           background: 'none',
           border: 'none',
           cursor: 'pointer',
           fontSize: 'var(--text-sm)',
           color: 'var(--text-secondary)',
           textDecoration: 'underline',
+          textUnderlineOffset: '3px',
           fontFamily: 'inherit',
+          letterSpacing: '-0.01em',
         }}
       >
         Close
