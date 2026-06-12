@@ -98,38 +98,47 @@ function ModeButton({
   return (
     <button
       onClick={onClick}
-      // Mouse hover: show glass on desktop without needing a click
       onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActive(true) }}
-      // Touch press: show glass on tap
       onPointerDown={() => setActive(true)}
-      // Mouse release: stay active (mouse is still hovering)
-      // Touch release: deactivate
       onPointerUp={(e) => { if (e.pointerType === 'touch') setActive(false) }}
       onPointerLeave={() => setActive(false)}
       onPointerCancel={() => setActive(false)}
       style={{
-        background: active ? `${mode.accent}16` : 'transparent',
-        backdropFilter: active ? 'blur(20px) saturate(180%)' : 'none',
-        WebkitBackdropFilter: active ? 'blur(20px) saturate(180%)' : 'none',
+        position: 'relative',
+        background: 'transparent',
         border: 'none',
         borderRadius: '14px',
-        boxShadow: active
-          ? `0 4px 40px ${mode.accent}30, inset 0 1px 0 ${mode.accent}20`
-          : 'none',
         cursor: 'pointer',
         fontFamily: 'var(--font-cormorant)',
         fontSize: 'var(--text-3xl)',
         fontWeight: 300,
         letterSpacing: '0.15em',
         color: active ? mode.accent : 'var(--text-primary)',
-        transition: 'transform 150ms ease, color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+        transition: 'color 100ms ease',
         lineHeight: 1,
         padding: '14px 44px',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         touchAction: 'manipulation',
+        willChange: 'transform',
       }}
     >
+      {/* Glass layer — always composited, opacity toggles to avoid layer thrash */}
+      <span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '14px',
+          backdropFilter: 'blur(12px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+          background: `${mode.accent}16`,
+          boxShadow: `0 4px 32px ${mode.accent}28, inset 0 1px 0 ${mode.accent}18`,
+          opacity: active ? 1 : 0,
+          transition: 'opacity 100ms ease',
+          pointerEvents: 'none',
+        }}
+      />
       {mode.name}
     </button>
   )

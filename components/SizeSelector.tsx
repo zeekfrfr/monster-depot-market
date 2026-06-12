@@ -62,10 +62,8 @@ export default function SizeSelector({
             onPointerLeave={() => setActiveItem(null)}
             onPointerCancel={() => setActiveItem(null)}
             style={{
-              background: isActive ? `${accent}14` : 'none',
-              backdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
-              WebkitBackdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
-              boxShadow: isActive ? `0 4px 24px ${accent}20, inset 0 1px 0 ${accent}18` : 'none',
+              position: 'relative',
+              background: 'none',
               border: 'none',
               borderBottom: isSelected ? `2px solid ${accent}` : '2px solid transparent',
               borderRadius: '10px 10px 0 0',
@@ -76,16 +74,32 @@ export default function SizeSelector({
               flexDirection: 'column',
               gap: '2px',
               textAlign: 'left',
-              transition: 'border-color 200ms ease, background 180ms ease, box-shadow 180ms ease',
+              transition: 'border-color 100ms ease',
+              willChange: 'transform',
             }}
           >
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '10px 10px 0 0',
+                backdropFilter: 'blur(10px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(10px) saturate(160%)',
+                background: `${accent}14`,
+                boxShadow: `0 4px 20px ${accent}18, inset 0 1px 0 ${accent}14`,
+                opacity: isActive ? 1 : 0,
+                transition: 'opacity 100ms ease',
+                pointerEvents: 'none',
+              }}
+            />
             <span
               style={{
                 fontSize: 'var(--text-sm)',
                 fontWeight: isSelected ? 500 : 400,
                 color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                 fontFamily: 'inherit',
-                transition: 'color 150ms ease',
+                transition: 'color 100ms ease',
               }}
             >
               {opt.label}

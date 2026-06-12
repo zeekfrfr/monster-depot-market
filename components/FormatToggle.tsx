@@ -36,10 +36,8 @@ export default function FormatToggle({
             onPointerLeave={() => setActiveItem(null)}
             onPointerCancel={() => setActiveItem(null)}
             style={{
-              background: isActive ? `${accent}14` : 'none',
-              backdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
-              WebkitBackdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
-              boxShadow: isActive ? `0 4px 24px ${accent}20, inset 0 1px 0 ${accent}18` : 'none',
+              position: 'relative',
+              background: 'none',
               border: 'none',
               borderBottom: isSelected ? `2px solid ${accent}` : '2px solid transparent',
               borderRadius: '10px 10px 0 0',
@@ -47,15 +45,31 @@ export default function FormatToggle({
               padding: '8px 12px 10px',
               margin: '0 -12px',
               textAlign: 'left',
-              transition: 'border-color 200ms ease, background 180ms ease, box-shadow 180ms ease',
+              transition: 'border-color 100ms ease',
+              willChange: 'transform',
             }}
           >
+            <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '10px 10px 0 0',
+                backdropFilter: 'blur(10px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(10px) saturate(160%)',
+                background: `${accent}14`,
+                boxShadow: `0 4px 20px ${accent}18, inset 0 1px 0 ${accent}14`,
+                opacity: isActive ? 1 : 0,
+                transition: 'opacity 100ms ease',
+                pointerEvents: 'none',
+              }}
+            />
             <div
               style={{
                 fontSize: 'var(--text-base)',
                 fontWeight: 500,
                 color: isSelected ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                transition: 'color 200ms ease',
+                transition: 'color 100ms ease',
                 fontFamily: 'inherit',
                 marginBottom: '3px',
               }}
@@ -67,7 +81,7 @@ export default function FormatToggle({
                 fontSize: 'var(--text-sm)',
                 fontWeight: 300,
                 color: isSelected ? 'var(--text-secondary)' : 'var(--text-tertiary)',
-                transition: 'color 200ms ease',
+                transition: 'color 100ms ease',
                 fontFamily: 'inherit',
               }}
             >

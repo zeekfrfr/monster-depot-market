@@ -69,7 +69,7 @@ export default function ModePage({ mode }: ModePageProps) {
     >
       {/* Back */}
       <button
-        onClick={() => router.push('/')}
+        onClick={() => router.back()}
         style={{
           background: 'none',
           border: 'none',

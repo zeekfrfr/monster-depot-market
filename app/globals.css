@@ -106,7 +106,7 @@ a[href]:active,
 }
 
 .page-enter {
-  animation: fadeIn 200ms ease forwards;
+  animation: fadeIn 120ms ease forwards;
 }
 
 .page-exit {
