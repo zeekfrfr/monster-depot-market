@@ -46,6 +46,22 @@ body {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Remove iOS/Android default blue tap flash */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Kill 300ms tap delay everywhere */
+button,
+a[href],
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Universal press/tap feedback — scale only so dark buttons don't go see-through */
+button:not(:disabled):active,
+a[href]:active,
+[role="button"]:active {
+  transform: scale(0.96);
 }
 
 @keyframes fadeIn {

@@ -92,7 +92,7 @@ function ModeButton({
         fontWeight: 300,
         letterSpacing: '0.15em',
         color: active ? mode.accent : 'var(--text-primary)',
-        transition: 'color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+        transition: 'transform 150ms ease, color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
         lineHeight: 1,
         padding: '14px 44px',
         userSelect: 'none',
