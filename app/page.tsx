@@ -32,7 +32,7 @@ export default function LandingPage() {
           fontFamily: 'var(--font-cormorant)',
           fontSize: 'var(--text-xl)',
           fontWeight: 300,
-          color: 'var(--brand-purple)',
+          color: 'var(--brand-purple-light)',
           letterSpacing: '0.06em',
           textAlign: 'center',
           lineHeight: 1,

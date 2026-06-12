@@ -13,7 +13,8 @@
   --text-tertiary: #b8b6b0;
 
   /* Brand */
-  --brand-purple: #8966ad;
+  --brand-purple-dark:  #2D1B69;
+  --brand-purple-light: #7C3AED;
 
   /* Mode accents */
   --lift: #d4a853;
