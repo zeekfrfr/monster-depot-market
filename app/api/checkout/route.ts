@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const SQUARE_BASE =
-  process.env.NODE_ENV === 'production'
-    ? 'https://connect.squareup.com'
-    : 'https://connect.squareupsandbox.com'
+const EDGE_FN = 'https://vmoqfnkwswwbewzsbyqb.supabase.co/functions/v1/create-payment'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { sourceId, amount } = body
-
-  if (!process.env.SQUARE_ACCESS_TOKEN) {
-    return NextResponse.json(
-      { error: { message: 'Payment not configured. Add SQUARE_ACCESS_TOKEN to environment variables.' } },
-      { status: 503 }
-    )
-  }
+  const { sourceId, amount, lineItems } = body
 
   if (!sourceId || !amount) {
     return NextResponse.json(
@@ -23,29 +13,12 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const response = await fetch(`${SQUARE_BASE}/v2/payments`, {
+  const res = await fetch(EDGE_FN, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-      'Square-Version': '2024-01-17',
-    },
-    body: JSON.stringify({
-      source_id: sourceId,
-      idempotency_key: crypto.randomUUID(),
-      amount_money: {
-        amount,
-        currency: 'USD',
-      },
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceId, amount, lineItems }),
   })
 
-  const data = await response.json()
-
-  if (!response.ok) {
-    const errMsg = data.errors?.[0]?.detail ?? 'Payment failed.'
-    return NextResponse.json({ error: { message: errMsg } }, { status: 400 })
-  }
-
-  return NextResponse.json({ orderId: data.payment.id, status: 'SUCCESS' })
+  const data = await res.json()
+  return NextResponse.json(data, { status: res.ok ? 200 : res.status })
 }

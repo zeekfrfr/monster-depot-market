@@ -17,8 +17,16 @@ interface SquareCard {
 }
 
 export async function initSquare(): Promise<SquarePayments | null> {
-  const appId = process.env.NEXT_PUBLIC_SQUARE_APP_ID
-  const locationId = process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID
+  const env = process.env.NEXT_PUBLIC_SQUARE_ENVIRONMENT ?? 'sandbox'
+  const isProd = env === 'production'
+
+  const appId = isProd
+    ? process.env.NEXT_PUBLIC_SQUARE_PROD_APP_ID
+    : process.env.NEXT_PUBLIC_SQUARE_SANDBOX_APP_ID
+
+  const locationId = isProd
+    ? process.env.NEXT_PUBLIC_SQUARE_PROD_LOCATION_ID
+    : process.env.NEXT_PUBLIC_SQUARE_SANDBOX_LOCATION_ID
 
   if (!appId || !locationId || !window.Square) return null
 
