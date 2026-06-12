@@ -107,7 +107,7 @@ export const MODES: ModeProduct[] = [
     name: 'DRIVE',
     slug: 'drive',
     tagline: 'For whatever comes next.',
-    accent: '#C47A5A',
+    accent: '#A03040',
     flavors: ['Blood Orange', 'Cherry Lime', 'Dragonfruit'],
     formats: {
       stick: { single: 2.85, '7pack': 19.99 },

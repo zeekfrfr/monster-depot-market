@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Format, AnySize, StickSize, RTDSize } from '@/lib/products'
 
 interface SizeSelectorProps {
@@ -31,6 +32,8 @@ export default function SizeSelector({
   accent,
   onSelect,
 }: SizeSelectorProps) {
+  const [activeItem, setActiveItem] = useState<AnySize | null>(null)
+
   const options =
     format === 'stick'
       ? STICK_OPTIONS.map((o) => ({
@@ -48,23 +51,32 @@ export default function SizeSelector({
     <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
       {options.map((opt) => {
         const isSelected = opt.size === selected
+        const isActive = activeItem === opt.size
         return (
           <button
             key={opt.size}
             onClick={() => onSelect(opt.size)}
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActiveItem(opt.size) }}
+            onPointerDown={() => setActiveItem(opt.size)}
+            onPointerUp={(e) => { if (e.pointerType === 'touch') setActiveItem(null) }}
+            onPointerLeave={() => setActiveItem(null)}
+            onPointerCancel={() => setActiveItem(null)}
             style={{
-              background: 'none',
+              background: isActive ? `${accent}14` : 'none',
+              backdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
+              WebkitBackdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
+              boxShadow: isActive ? `0 4px 24px ${accent}20, inset 0 1px 0 ${accent}18` : 'none',
               border: 'none',
+              borderBottom: isSelected ? `2px solid ${accent}` : '2px solid transparent',
+              borderRadius: '10px 10px 0 0',
               cursor: 'pointer',
-              padding: '0 0 6px 0',
+              padding: '6px 10px 6px',
+              margin: '0 -10px',
               display: 'flex',
               flexDirection: 'column',
               gap: '2px',
-              borderBottom: isSelected
-                ? `2px solid ${accent}`
-                : '2px solid transparent',
-              transition: 'border-color 200ms ease',
               textAlign: 'left',
+              transition: 'border-color 200ms ease, background 180ms ease, box-shadow 180ms ease',
             }}
           >
             <span

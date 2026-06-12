@@ -83,13 +83,13 @@ function ModeButton({
       onPointerLeave={() => setActive(false)}
       onPointerCancel={() => setActive(false)}
       style={{
-        background: active ? `${mode.accent}18` : 'transparent',
-        backdropFilter: active ? 'blur(16px) saturate(180%)' : 'none',
-        WebkitBackdropFilter: active ? 'blur(16px) saturate(180%)' : 'none',
-        border: `1px solid ${active ? mode.accent + '50' : 'transparent'}`,
+        background: active ? `${mode.accent}16` : 'transparent',
+        backdropFilter: active ? 'blur(20px) saturate(180%)' : 'none',
+        WebkitBackdropFilter: active ? 'blur(20px) saturate(180%)' : 'none',
+        border: 'none',
         borderRadius: '14px',
         boxShadow: active
-          ? `0 4px 32px ${mode.accent}28, 0 0 0 1px ${mode.accent}18, inset 0 1px 0 ${mode.accent}30`
+          ? `0 4px 40px ${mode.accent}30, inset 0 1px 0 ${mode.accent}20`
           : 'none',
         cursor: 'pointer',
         fontFamily: 'var(--font-cormorant)',

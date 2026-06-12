@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Format } from '@/lib/products'
 
 interface FormatToggleProps {
@@ -18,22 +19,35 @@ export default function FormatToggle({
   accent,
   onSelect,
 }: FormatToggleProps) {
+  const [activeItem, setActiveItem] = useState<Format | null>(null)
+
   return (
     <div style={{ display: 'flex', gap: '32px' }}>
       {OPTIONS.map((opt) => {
         const isSelected = opt.value === selected
+        const isActive = activeItem === opt.value
         return (
           <button
             key={opt.value}
             onClick={() => onSelect(opt.value)}
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActiveItem(opt.value) }}
+            onPointerDown={() => setActiveItem(opt.value)}
+            onPointerUp={(e) => { if (e.pointerType === 'touch') setActiveItem(null) }}
+            onPointerLeave={() => setActiveItem(null)}
+            onPointerCancel={() => setActiveItem(null)}
             style={{
-              background: 'none',
+              background: isActive ? `${accent}14` : 'none',
+              backdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
+              WebkitBackdropFilter: isActive ? 'blur(16px) saturate(180%)' : 'none',
+              boxShadow: isActive ? `0 4px 24px ${accent}20, inset 0 1px 0 ${accent}18` : 'none',
               border: 'none',
-              cursor: 'pointer',
-              padding: '0 0 10px 0',
-              textAlign: 'left',
               borderBottom: isSelected ? `2px solid ${accent}` : '2px solid transparent',
-              transition: 'border-color 200ms ease',
+              borderRadius: '10px 10px 0 0',
+              cursor: 'pointer',
+              padding: '8px 12px 10px',
+              margin: '0 -12px',
+              textAlign: 'left',
+              transition: 'border-color 200ms ease, background 180ms ease, box-shadow 180ms ease',
             }}
           >
             <div
