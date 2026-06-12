@@ -123,17 +123,14 @@ function ModeButton({
         willChange: 'transform',
       }}
     >
-      {/* Glass layer — always composited, opacity toggles to avoid layer thrash */}
       <span
         aria-hidden
         style={{
           position: 'absolute',
           inset: 0,
           borderRadius: '14px',
-          backdropFilter: 'blur(12px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-          background: `${mode.accent}16`,
-          boxShadow: `0 4px 32px ${mode.accent}28, inset 0 1px 0 ${mode.accent}18`,
+          background: `${mode.accent}18`,
+          boxShadow: `0 4px 32px ${mode.accent}30`,
           opacity: active ? 1 : 0,
           transition: 'opacity 100ms ease',
           pointerEvents: 'none',
