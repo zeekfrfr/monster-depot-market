@@ -73,8 +73,13 @@ function ModeButton({
   return (
     <button
       onClick={onClick}
+      // Mouse hover: show glass on desktop without needing a click
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActive(true) }}
+      // Touch press: show glass on tap
       onPointerDown={() => setActive(true)}
-      onPointerUp={() => setActive(false)}
+      // Mouse release: stay active (mouse is still hovering)
+      // Touch release: deactivate
+      onPointerUp={(e) => { if (e.pointerType === 'touch') setActive(false) }}
       onPointerLeave={() => setActive(false)}
       onPointerCancel={() => setActive(false)}
       style={{
