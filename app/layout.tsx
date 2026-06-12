@@ -4,6 +4,7 @@ import Script from 'next/script'
 import { CartProvider } from '@/lib/cart'
 import Nav from '@/components/Nav'
 import CartSheet from '@/components/CartSheet'
+import Footer from '@/components/Footer'
 import './globals.css'
 
 const cormorant = Cormorant_Garamond({
@@ -26,25 +27,19 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.ico' },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const squareSrc = process.env.NEXT_PUBLIC_SQUARE_ENVIRONMENT === 'production'
+    ? 'https://web.squarecdn.com/v1/square.js'
+    : 'https://sandbox.web.squarecdn.com/v1/square.js'
+
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
       <body>
-        <Script
-          src={
-            process.env.NODE_ENV === 'production'
-              ? 'https://web.squarecdn.com/v1/square.js'
-              : 'https://sandbox.web.squarecdn.com/v1/square.js'
-          }
-          strategy="lazyOnload"
-        />
+        <Script src={squareSrc} strategy="lazyOnload" />
         <CartProvider>
           <Nav />
           <main>{children}</main>
+          <Footer />
           <CartSheet />
         </CartProvider>
       </body>
