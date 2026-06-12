@@ -15,12 +15,12 @@ interface SizeSelectorProps {
 }
 
 const STICK_OPTIONS: { size: StickSize; label: string }[] = [
-  { size: 'single', label: 'Single Stick' },
   { size: '7pack', label: '7-Pack' },
+  { size: '14pack', label: '14-Pack' },
+  { size: '28pack', label: '28-Pack' },
 ]
 
 const RTD_OPTIONS: { size: RTDSize; label: string }[] = [
-  { size: 'single', label: 'Single Can' },
   { size: '4pack', label: '4-Pack' },
   { size: '12pack', label: '12-Pack' },
 ]

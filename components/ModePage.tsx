@@ -20,7 +20,7 @@ export default function ModePage({ mode }: ModePageProps) {
 
   const [flavor, setFlavor] = useState(mode.flavors[0].name)
   const [format, setFormat] = useState<Format>('stick')
-  const [size, setSize] = useState<AnySize>('single')
+  const [size, setSize] = useState<AnySize>(getDefaultSize('stick'))
   const [arrowHovered, setArrowHovered] = useState(false)
   const [added, setAdded] = useState(false)
   const [priceKey, setPriceKey] = useState(0)
@@ -33,13 +33,10 @@ export default function ModePage({ mode }: ModePageProps) {
     setPriceKey((k) => k + 1)
   }, [])
 
-  const handleSizeChange = useCallback(
-    (newSize: AnySize) => {
-      setSize(newSize)
-      setPriceKey((k) => k + 1)
-    },
-    []
-  )
+  const handleSizeChange = useCallback((newSize: AnySize) => {
+    setSize(newSize)
+    setPriceKey((k) => k + 1)
+  }, [])
 
   const handleAdd = () => {
     const id = `${mode.slug}-${flavor}-${format}-${size}`
@@ -160,22 +157,6 @@ export default function ModePage({ mode }: ModePageProps) {
         }}
       />
 
-      {/* Flavors */}
-      <FlavorSelector
-        flavors={mode.flavors}
-        selected={flavor}
-        accent={mode.accent}
-        onSelect={setFlavor}
-      />
-
-      <div
-        style={{
-          height: '1px',
-          backgroundColor: 'var(--mid-gray)',
-          margin: '40px 0',
-        }}
-      />
-
       {/* Format */}
       <p
         style={{
@@ -202,6 +183,54 @@ export default function ModePage({ mode }: ModePageProps) {
         }}
       />
 
+      {/* Flavors */}
+      <FlavorSelector
+        flavors={mode.flavors}
+        selected={flavor}
+        accent={mode.accent}
+        onSelect={setFlavor}
+      />
+
+      {/* Mix it with — stick only, sits directly under flavor */}
+      {format === 'stick' && (() => {
+        const pairings = mode.flavors.find(f => f.name === flavor)?.pairings ?? []
+        return (
+          <>
+            <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
+            <p
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: '12px',
+              }}
+            >
+              Mix it with
+            </p>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 300,
+                color: 'var(--text-secondary)',
+                letterSpacing: '-0.01em',
+                lineHeight: 1.6,
+              }}
+            >
+              {pairings.join(' · ')}
+            </p>
+          </>
+        )
+      })()}
+
+      <div
+        style={{
+          height: '1px',
+          backgroundColor: 'var(--mid-gray)',
+          margin: '40px 0',
+        }}
+      />
+
       {/* Size */}
       <div style={{ marginBottom: '24px' }}>
         <SizeSelector
@@ -213,7 +242,7 @@ export default function ModePage({ mode }: ModePageProps) {
         />
       </div>
 
-      {/* Price + Add row */}
+      {/* Price + Add */}
       <div
         style={{
           display: 'flex',
@@ -273,38 +302,6 @@ export default function ModePage({ mode }: ModePageProps) {
         </button>
       </div>
 
-      {/* Mix it with — stick pack only */}
-      {format === 'stick' && (() => {
-        const pairings = mode.flavors.find(f => f.name === flavor)?.pairings ?? []
-        return (
-          <>
-            <div style={{ height: '1px', backgroundColor: 'var(--mid-gray)', margin: '40px 0' }} />
-            <p
-              style={{
-                fontSize: 'var(--text-sm)',
-                color: 'var(--text-tertiary)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: '12px',
-              }}
-            >
-              Mix it with
-            </p>
-            <p
-              style={{
-                fontSize: 'var(--text-base)',
-                fontWeight: 300,
-                color: 'var(--text-secondary)',
-                letterSpacing: '-0.01em',
-                lineHeight: 1.6,
-              }}
-            >
-              {pairings.join(' · ')}
-            </p>
-          </>
-        )
-      })()}
-
       <div
         style={{
           height: '1px',
@@ -313,7 +310,7 @@ export default function ModePage({ mode }: ModePageProps) {
         }}
       />
 
-      {/* Ingredients */}
+      {/* What's inside */}
       <IngredientAccordion actives={mode.actives} />
     </div>
   )

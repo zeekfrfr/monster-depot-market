@@ -1,6 +1,6 @@
 export type Format = 'stick' | 'rtd'
-export type StickSize = 'single' | '7pack'
-export type RTDSize = 'single' | '4pack' | '12pack'
+export type StickSize = '7pack' | '14pack' | '28pack'
+export type RTDSize = '4pack' | '12pack'
 export type AnySize = StickSize | RTDSize
 
 export interface Active {
@@ -28,12 +28,12 @@ export interface ModeProduct {
 }
 
 export const STICK_SIZE_LABELS: Record<StickSize, string> = {
-  single: 'Single Stick',
   '7pack': '7-Pack',
+  '14pack': '14-Pack',
+  '28pack': '28-Pack',
 }
 
 export const RTD_SIZE_LABELS: Record<RTDSize, string> = {
-  single: 'Single Can',
   '4pack': '4-Pack',
   '12pack': '12-Pack',
 }
@@ -51,8 +51,8 @@ export const MODES: ModeProduct[] = [
       { name: 'Pineapple Passionfruit', pairings: ['Coconut water', 'Ginger beer', 'Sparkling water', 'Lime soda'] },
     ],
     formats: {
-      stick: { single: 2.85, '7pack': 19.99 },
-      rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
+      stick: { '7pack': 19.99, '14pack': 34.99, '28pack': 59.99 },
+      rtd: { '4pack': 34.99, '12pack': 79.99 },
     },
     actives: [
       { name: 'L-Tyrosine', amount: '500 mg' },
@@ -75,8 +75,8 @@ export const MODES: ModeProduct[] = [
       { name: 'Citrus Spritz',          pairings: ['Tonic water', 'Grapefruit soda', 'Sparkling water', 'Elderflower soda'] },
     ],
     formats: {
-      stick: { single: 2.85, '7pack': 19.99 },
-      rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
+      stick: { '7pack': 19.99, '14pack': 34.99, '28pack': 59.99 },
+      rtd: { '4pack': 34.99, '12pack': 79.99 },
     },
     actives: [
       { name: 'L-Theanine', amount: '200 mg' },
@@ -97,8 +97,8 @@ export const MODES: ModeProduct[] = [
       { name: 'Tart Cherry',         pairings: ['Still water', 'Warm water', 'Hibiscus tea', 'Sparkling water'] },
     ],
     formats: {
-      stick: { single: 2.85, '7pack': 19.99 },
-      rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
+      stick: { '7pack': 19.99, '14pack': 34.99, '28pack': 59.99 },
+      rtd: { '4pack': 34.99, '12pack': 79.99 },
     },
     actives: [
       { name: 'Magnesium Glycinate', amount: '300 mg' },
@@ -119,8 +119,8 @@ export const MODES: ModeProduct[] = [
       { name: 'Cucumber Melon',   pairings: ['Cold water', 'Cucumber water', 'Sparkling water', 'Coconut water'] },
     ],
     formats: {
-      stick: { single: 2.85, '7pack': 19.99 },
-      rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
+      stick: { '7pack': 19.99, '14pack': 34.99, '28pack': 59.99 },
+      rtd: { '4pack': 34.99, '12pack': 79.99 },
     },
     actives: [
       { name: 'Citicoline (CDP-Choline)', amount: '250 mg' },
@@ -141,8 +141,8 @@ export const MODES: ModeProduct[] = [
       { name: 'Dragonfruit',  pairings: ['Coconut water', 'Lychee soda', 'Sparkling water', 'Lime soda'] },
     ],
     formats: {
-      stick: { single: 2.85, '7pack': 19.99 },
-      rtd: { single: 7.99, '4pack': 34.99, '12pack': 79.99 },
+      stick: { '7pack': 19.99, '14pack': 34.99, '28pack': 59.99 },
+      rtd: { '4pack': 34.99, '12pack': 79.99 },
     },
     actives: [
       { name: 'L-Tyrosine', amount: '500 mg' },
@@ -174,5 +174,5 @@ export function getSizeLabel(format: Format, size: AnySize): string {
 }
 
 export function getDefaultSize(format: Format): AnySize {
-  return format === 'stick' ? 'single' : 'single'
+  return format === 'stick' ? '7pack' : '4pack'
 }
