@@ -238,6 +238,19 @@ a[href],
   z-index: 1;
 }
 
+/* Flavor world cards — desktop left-aligns content + CTA row (moved out of a
+   JSX <style> to avoid a server/client escaping mismatch on the > combinator) */
+.flavor-card-seemore:hover { opacity: 1 !important; }
+@media (min-width: 1024px) {
+  .flavor-card-content {
+    align-items: flex-start !important;
+    text-align: left !important;
+    max-width: 560px;
+    margin-left: 10%;
+  }
+  .flavor-card-cta { justify-content: flex-start !important; }
+}
+
 /* Hide scrollbars on horizontal snap rows (Three Ways, etc.) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

@@ -89,6 +89,7 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
         </p>
 
         <div
+          className="flavor-card-cta"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -132,21 +133,6 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
           </Link>
         </div>
       </div>
-
-      <style>{`
-        .flavor-card-seemore:hover { opacity: 1 !important; }
-        @media (min-width: 1024px) {
-          .flavor-card-content {
-            align-items: flex-start !important;
-            text-align: left !important;
-            max-width: 560px;
-            margin-left: 10%;
-          }
-          .flavor-card-content > div:last-of-type {
-            justify-content: flex-start !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }

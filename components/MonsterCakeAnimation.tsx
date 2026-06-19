@@ -1,7 +1,3 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-
 type Variant = 'home' | 'flavor'
 
 interface MonsterCakeAnimationProps {
@@ -9,38 +5,24 @@ interface MonsterCakeAnimationProps {
 }
 
 /**
- * Signature visual: a bold cartoonish mug whose liquid blooms from cobalt blue
- * (#0A1F5C) to deep purple (#3B0764) on mount via an expanding radial gradient.
- * A soft glow behind the mug pulses opacity on a loop.
- *
- * Animations are CSS only and respect prefers-reduced-motion (handled globally).
+ * Signature visual: a bold cartoonish mug whose cobalt liquid blooms into deep
+ * purple. The bloom is a soft-edged purple <circle> that GROWS from the liquid's
+ * centre via a CSS transform: scale() animation over a cobalt base — CSS
+ * transforms animate organically in every engine (incl. Safari), unlike SVG
+ * SMIL or CSS stop-color transitions. A glow behind the mug crossfades
+ * cobalt -> purple and pulses on a loop. Pure CSS; respects prefers-reduced-motion.
  */
 export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationProps) {
-  const [bloomed, setBloomed] = useState(false)
-
-  // Trigger the color bloom 600ms after mount.
-  useEffect(() => {
-    const id = window.setTimeout(() => setBloomed(true), 600)
-    return () => window.clearTimeout(id)
-  }, [])
-
   const isFlavor = variant === 'flavor'
-
-  // Mug sizing per variant.
   const mugSize = isFlavor ? 'min(60vw, 360px)' : 'min(40vw, 240px)'
+  const bloomMs = isFlavor ? 2500 : 2000
 
-  // Bloom transition duration per variant.
-  const bloomDuration = isFlavor ? '2500ms' : '2000ms'
-
-  // Start (cobalt) and end (deep purple) liquid colors.
-  const startColor = '#0A1F5C'
-  const endColor = '#3B0764'
-  const currentColor = bloomed ? endColor : startColor
-
-  // Unique ids so multiple instances on a page don't collide.
   const uid = isFlavor ? 'flavor' : 'home'
-  const liquidGradId = `mca-liquid-${uid}`
-  const liquidClipId = `mca-clip-${uid}`
+  const clipId = `mca-clip-${uid}`
+  const bloomGradId = `mca-bloom-${uid}`
+
+  const cobalt = '#0A1F5C'
+  const purple = '#3B0764'
 
   return (
     <div
@@ -52,10 +34,10 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
         justifyContent: 'center',
       }}
     >
-      {/* Glow behind the mug — same color family as the current liquid. */}
+      {/* Glow behind the mug — wrapper pulses opacity; inner layers crossfade colour. */}
       <div
         aria-hidden="true"
-        className="anim-glow-pulse"
+        className="mca-glow"
         style={{
           position: 'absolute',
           top: '50%',
@@ -63,15 +45,31 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
           width: '180%',
           height: '180%',
           transform: 'translate(-50%, -50%)',
-          borderRadius: 'var(--radius-full)',
-          background: `radial-gradient(circle at center, ${currentColor} 0%, rgba(10,31,92,0) 70%)`,
-          filter: 'blur(80px)',
-          // Smoothly carry the glow color along with the liquid bloom.
-          transition: `background ${bloomDuration} ease-in-out`,
           zIndex: 0,
           pointerEvents: 'none',
         }}
-      />
+      >
+        <div
+          className="mca-glow-cobalt"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'var(--radius-full)',
+            background: `radial-gradient(circle at center, ${cobalt} 0%, rgba(10,31,92,0) 70%)`,
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          className="mca-glow-purple"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'var(--radius-full)',
+            background: `radial-gradient(circle at center, ${purple} 0%, rgba(59,7,100,0) 70%)`,
+            filter: 'blur(80px)',
+          }}
+        />
+      </div>
 
       {/* Mug */}
       <svg
@@ -88,60 +86,25 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
         }}
       >
         <defs>
-          {/*
-            Radial gradient that expands from the center to look like color
-            emerging from within. We animate the STOP COLORS via the `bloomed`
-            class so the deep purple blooms outward through the cobalt.
-          */}
-          <radialGradient id={liquidGradId} cx="50%" cy="50%" r="65%">
-            <stop
-              offset="0%"
-              stopColor={bloomed ? endColor : startColor}
-              style={{ transition: `stop-color ${bloomDuration} ease-in-out` }}
-            />
-            <stop
-              offset="55%"
-              stopColor={bloomed ? endColor : startColor}
-              style={{
-                transition: `stop-color ${bloomDuration} ease-in-out`,
-                transitionDelay: isFlavor ? '300ms' : '250ms',
-              }}
-            />
-            <stop
-              offset="100%"
-              stopColor={startColor}
-              style={{
-                transition: `stop-color ${bloomDuration} ease-in-out`,
-                transitionDelay: isFlavor ? '600ms' : '500ms',
-              }}
-            />
+          {/* Soft radial edge so the growing circle reads as liquid, not a hard disc. */}
+          <radialGradient id={bloomGradId} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={purple} stopOpacity="1" />
+            <stop offset="70%" stopColor={purple} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={purple} stopOpacity="0" />
           </radialGradient>
 
           {/* Clip the liquid to the inner mug body so it never spills. */}
-          <clipPath id={liquidClipId}>
+          <clipPath id={clipId}>
             <path d="M 26 30 L 84 30 L 80 96 Q 79 104 71 104 L 39 104 Q 31 104 30 96 Z" />
           </clipPath>
         </defs>
 
-        {/* Liquid — fills ~70% of the interior, clipped to mug body. */}
-        <g clipPath={`url(#${liquidClipId})`}>
-          <rect
-            x="20"
-            y="51"
-            width="80"
-            height="60"
-            fill={`url(#${liquidGradId})`}
-          />
+        {/* Liquid — cobalt base + purple bloom growing from the centre, clipped to mug. */}
+        <g clipPath={`url(#${clipId})`}>
+          <rect x="20" y="51" width="80" height="60" fill={cobalt} />
+          <circle className="mca-bloom" cx="55" cy="80" r="46" fill={`url(#${bloomGradId})`} />
           {/* Subtle surface line at the top of the liquid. */}
-          <line
-            x1="26"
-            y1="51"
-            x2="84"
-            y2="51"
-            stroke="#FFFFFF"
-            strokeWidth="1.5"
-            strokeOpacity="0.35"
-          />
+          <line x1="26" y1="51" x2="84" y2="51" stroke="#FFFFFF" strokeWidth="1.5" strokeOpacity="0.35" />
         </g>
 
         {/* Mug body outline — bold white stroke, no fill. */}
@@ -152,26 +115,10 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
           strokeWidth="2"
           strokeLinejoin="round"
         />
-
-        {/* Rim ellipse — gives the cylindrical, slightly-cartoonish look. */}
-        <ellipse
-          cx="55"
-          cy="30"
-          rx="29"
-          ry="7"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-        />
-
+        {/* Rim ellipse. */}
+        <ellipse cx="55" cy="30" rx="29" ry="7" fill="none" stroke="#FFFFFF" strokeWidth="2" />
         {/* Handle on the right. */}
-        <path
-          d="M 83 44 Q 104 44 104 62 Q 104 80 80 82"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+        <path d="M 83 44 Q 104 44 104 62 Q 104 80 80 82" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
       </svg>
 
       {isFlavor && (
@@ -192,19 +139,27 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
       )}
 
       <style>{`
-        @keyframes mcaGlowPulse {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.35; }
-        }
-        .anim-glow-pulse {
+        .mca-glow {
           opacity: 0.15;
           animation: mcaGlowPulse 3000ms ease-in-out infinite;
         }
+        .mca-glow-purple { opacity: 0; animation: mcaFadeIn ${bloomMs}ms ease-in-out 600ms forwards; }
+        .mca-glow-cobalt { opacity: 1; animation: mcaFadeOut ${bloomMs}ms ease-in-out 600ms forwards; }
+        .mca-bloom {
+          transform-box: fill-box;
+          transform-origin: center;
+          transform: scale(0);
+          animation: mcaBloom ${bloomMs}ms cubic-bezier(0.4, 0, 0.2, 1) 600ms forwards;
+        }
+        @keyframes mcaGlowPulse { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.35; } }
+        @keyframes mcaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes mcaFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes mcaBloom { from { transform: scale(0); } to { transform: scale(1); } }
         @media (prefers-reduced-motion: reduce) {
-          .anim-glow-pulse {
-            animation: none;
-            opacity: 0.25;
-          }
+          .mca-glow { animation: none; opacity: 0.28; }
+          .mca-glow-purple { animation: none; opacity: 1; }
+          .mca-glow-cobalt { animation: none; opacity: 0; }
+          .mca-bloom { animation: none; transform: scale(1); }
         }
       `}</style>
     </div>
