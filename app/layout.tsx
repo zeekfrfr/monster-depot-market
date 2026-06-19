@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
+import { Syne, DM_Sans } from 'next/font/google'
 import Script from 'next/script'
 import { CartProvider } from '@/lib/cart'
+import AgeGate from '@/components/AgeGate'
 import Nav from '@/components/Nav'
 import CartSheet from '@/components/CartSheet'
 import Footer from '@/components/Footer'
 import './globals.css'
 
-const cormorant = Cormorant_Garamond({
+const syne = Syne({
   subsets: ['latin'],
-  weight: ['300', '400'],
-  variable: '--font-cormorant',
+  weight: ['600', '700', '800'],
+  variable: '--font-syne',
   display: 'swap',
 })
 
@@ -22,8 +23,10 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Monster Depot',
-  description: 'Functional wellness. One decision at a time.',
+  metadataBase: new URL('https://monsterdepotmarket.com'),
+  title: 'Monster Depot Market — Got Munchies?',
+  description:
+    'Exotic single-serving dessert pouches. Add water, make a dessert in a mug, air fryer, or waffle maker in under 5 minutes. Five flavors. 18+.',
   icons: { icon: '/favicon.ico' },
 }
 
@@ -33,12 +36,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     : 'https://sandbox.web.squarecdn.com/v1/square.js'
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
       <body>
+        <a href="#main" className="skip-link">Skip to main content</a>
         <Script src={squareSrc} strategy="lazyOnload" />
         <CartProvider>
+          <AgeGate />
           <Nav />
-          <main>{children}</main>
+          <main id="main">{children}</main>
           <Footer />
           <CartSheet />
         </CartProvider>

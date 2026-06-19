@@ -45,7 +45,7 @@ export default function LoginPage() {
   const inputStyle = (field: string): React.CSSProperties => ({
     width: '100%',
     border: 'none',
-    borderBottom: `1px solid ${focused === field ? '#1A1A1A' : 'var(--mid-gray)'}`,
+    borderBottom: `1px solid ${focused === field ? 'var(--brand-purple-dark)' : '#E5E5E5'}`,
     borderRadius: 0,
     padding: '12px 0',
     fontSize: '15px',
@@ -59,34 +59,34 @@ export default function LoginPage() {
 
   return (
     <main
-      className="page-enter"
       style={{
-        minHeight: 'calc(100vh - 56px)',
+        minHeight: '100svh',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '96px 24px 64px',
+        padding: '120px 24px 80px',
+        background: 'var(--surface-white)',
       }}
     >
       <div style={{ width: '100%', maxWidth: '360px' }}>
         <p
           style={{
-            fontSize: 'var(--text-xs)',
+            fontSize: '11px',
             textTransform: 'uppercase',
             letterSpacing: '0.15em',
             color: 'var(--text-tertiary)',
             marginBottom: '12px',
           }}
         >
-          Monster Depot
+          Monster Depot Market
         </p>
 
         <h1
           style={{
-            fontFamily: 'var(--font-cormorant)',
-            fontSize: 'var(--text-2xl)',
-            fontWeight: 300,
-            letterSpacing: '0.02em',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 800,
+            fontSize: '28px',
+            letterSpacing: '-0.02em',
             color: 'var(--text-primary)',
             marginBottom: '40px',
           }}
@@ -121,12 +121,12 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p style={{ fontSize: 'var(--text-sm)', color: '#c0392b', marginBottom: '16px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '13px', color: '#c0392b', marginBottom: '16px', lineHeight: 1.5 }}>
               {error}
             </p>
           )}
           {resetSent && (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
               Password reset email sent. Check your inbox.
             </p>
           )}
@@ -137,14 +137,14 @@ export default function LoginPage() {
             style={{
               width: '100%',
               height: '52px',
-              backgroundColor: loading || !email || !password ? 'var(--mid-gray)' : '#1A1A1A',
-              color: loading || !email || !password ? 'var(--text-secondary)' : '#fff',
+              backgroundColor: loading || !email || !password ? 'var(--text-disabled)' : 'var(--brand-purple-light)',
+              color: '#fff',
               border: 'none',
-              borderRadius: '4px',
-              fontSize: 'var(--text-base)',
-              fontWeight: 500,
+              borderRadius: 'var(--radius-md)',
+              fontFamily: 'var(--font-syne)',
+              fontSize: '16px',
+              fontWeight: 700,
               cursor: loading || !email || !password ? 'default' : 'pointer',
-              fontFamily: 'inherit',
               transition: 'background-color 150ms ease',
               marginBottom: '24px',
             }}
@@ -159,12 +159,15 @@ export default function LoginPage() {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            fontSize: 'var(--text-sm)',
+            fontSize: '13px',
             color: 'var(--text-secondary)',
             textDecoration: 'underline',
             textUnderlineOffset: '3px',
             fontFamily: 'inherit',
-            padding: 0,
+            minHeight: '44px',
+            padding: '11px 4px',
+            display: 'inline-flex',
+            alignItems: 'center',
           }}
         >
           Forgot your password?

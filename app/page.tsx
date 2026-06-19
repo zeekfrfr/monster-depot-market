@@ -1,142 +1,307 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { MODES, type ModeProduct } from '@/lib/products'
+import MonsterCakeAnimation from '@/components/MonsterCakeAnimation'
+import FlavorWorldScroll from '@/components/FlavorWorldScroll'
+import SubscriptionHook from '@/components/SubscriptionHook'
+import ContentFeedPlaceholder from '@/components/ContentFeedPlaceholder'
+import { allToppings } from '@/lib/products'
 
-export default function LandingPage() {
-  const router = useRouter()
-  const handleSelect = (slug: string) => {
-    router.push(`/${slug}`)
+export default function HomePage() {
+  const [addedIndex, setAddedIndex] = useState<number | null>(null)
+  const [heroHover, setHeroHover] = useState(false)
+
+  const handleAdd = (index: number) => {
+    setAddedIndex(index)
+    window.setTimeout(() => {
+      setAddedIndex((current) => (current === index ? null : current))
+    }, 1200)
+  }
+
+  const scrollToFlavors = () => {
+    document
+      .getElementById('flavor-worlds')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
-    <div
-      style={{
-        minHeight: 'calc(100vh - 56px)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '64px 24px',
-      }}
-    >
-      <p
+    <main>
+      {/* Section 1 — Hero */}
+      <section
         style={{
-          fontFamily: 'var(--font-cormorant)',
-          fontSize: 'var(--text-xl)',
-          fontWeight: 300,
-          color: 'var(--brand-purple-light)',
-          letterSpacing: '0.06em',
-          textAlign: 'center',
-          lineHeight: 1,
-          marginBottom: '48px',
-        }}
-      >
-        Made for the session.
-      </p>
-
-      <p
-        style={{
-          fontSize: 'var(--text-2xl)',
-          fontWeight: 300,
-          color: 'var(--text-secondary)',
-          letterSpacing: '-0.01em',
-          marginBottom: '48px',
-          textAlign: 'center',
-          lineHeight: 1.2,
-        }}
-      >
-        What are you looking for today?
-      </p>
-
-      <div
-        style={{
+          height: '100svh',
+          overflow: 'hidden',
+          background: 'var(--brand-purple-dark)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '20px',
-        }}
-      >
-        {MODES.map((mode) => (
-          <ModeButton
-            key={mode.slug}
-            mode={mode}
-            onClick={() => handleSelect(mode.slug)}
-          />
-        ))}
-      </div>
-
-      <p
-        style={{
-          fontFamily: 'var(--font-cormorant)',
-          fontSize: 'var(--text-xl)',
-          fontWeight: 300,
-          color: 'var(--text-tertiary)',
-          letterSpacing: '0.03em',
-          lineHeight: 1.6,
+          justifyContent: 'center',
           textAlign: 'center',
-          maxWidth: '520px',
-          marginTop: '96px',
+          padding: 'var(--space-6)',
         }}
       >
-        The session already has your taste buds paying attention. We just gave them something worth it.
-      </p>
-    </div>
+        <MonsterCakeAnimation variant="home" />
+
+        <h1
+          className="anim-fade-up"
+          style={{
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 800,
+            fontSize: 'clamp(3rem, 10vw, 6rem)',
+            color: 'var(--surface-white)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.0,
+            marginBottom: '32px',
+          }}
+        >
+          Got Munchies?
+        </h1>
+
+        <button
+          type="button"
+          onClick={scrollToFlavors}
+          onMouseEnter={() => setHeroHover(true)}
+          onMouseLeave={() => setHeroHover(false)}
+          onFocus={() => setHeroHover(true)}
+          onBlur={() => setHeroHover(false)}
+          className="anim-fade-up"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--brand-purple-light)',
+            color: 'var(--surface-white)',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 700,
+            fontSize: '16px',
+            padding: '16px 40px',
+            minHeight: '52px',
+            minWidth: '180px',
+            border: 'none',
+            borderRadius: 'var(--radius-full)',
+            cursor: 'pointer',
+            animationDelay: '200ms',
+            transform: heroHover ? 'scale(1.03)' : 'scale(1)',
+            boxShadow: heroHover
+              ? '0 0 32px rgba(124, 58, 237, 0.6)'
+              : '0 0 0 rgba(124, 58, 237, 0)',
+            transition:
+              'transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-base) var(--ease-out)',
+          }}
+        >
+          Pick your pouch
+        </button>
+      </section>
+
+      {/* Section 2 — Flavor worlds */}
+      <FlavorWorldScroll />
+
+      {/* Section 3 — Subscription */}
+      <SubscriptionHook />
+
+      {/* Section 4 — Content feed */}
+      <section
+        id="content-feed"
+        style={{
+          width: '100%',
+          background: 'var(--surface-off)',
+          padding: '64px var(--space-6)',
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 800,
+            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+            color: 'var(--text-primary)',
+            textAlign: 'left',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.05,
+          }}
+        >
+          Real ones.
+        </h2>
+        <p
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 300,
+            fontSize: '16px',
+            color: 'var(--text-secondary)',
+            marginTop: '8px',
+          }}
+        >
+          What people are making.
+        </p>
+
+        <div style={{ marginTop: 'var(--space-6)' }}>
+          <ContentFeedPlaceholder />
+        </div>
+      </section>
+
+      {/* Section 5 — Add-ons */}
+      <section
+        id="add-ons"
+        style={{
+          width: '100%',
+          background: 'var(--surface-white)',
+          padding: '64px var(--space-6)',
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 800,
+            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+            color: 'var(--text-primary)',
+            textAlign: 'left',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.05,
+          }}
+        >
+          Make it yours.
+        </h2>
+        <p
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 300,
+            fontSize: '15px',
+            color: 'var(--text-secondary)',
+            marginTop: '8px',
+          }}
+        >
+          Add to any order at checkout.
+        </p>
+
+        <ToppingsGrid addedIndex={addedIndex} onAdd={handleAdd} />
+      </section>
+    </main>
   )
 }
 
-function ModeButton({
-  mode,
-  onClick,
+function ToppingsGrid({
+  addedIndex,
+  onAdd,
 }: {
-  mode: ModeProduct
-  onClick: () => void
+  addedIndex: number | null
+  onAdd: (index: number) => void
 }) {
-  const [active, setActive] = useState(false)
-
   return (
-    <button
-      onClick={onClick}
-      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setActive(true) }}
-      onPointerDown={() => setActive(true)}
-      onPointerUp={(e) => { if (e.pointerType === 'touch') setActive(false) }}
-      onPointerLeave={() => setActive(false)}
-      onPointerCancel={() => setActive(false)}
-      style={{
-        position: 'relative',
-        background: 'transparent',
-        border: 'none',
-        borderRadius: '14px',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-cormorant)',
-        fontSize: 'var(--text-3xl)',
-        fontWeight: 300,
-        letterSpacing: '0.15em',
-        color: active ? mode.accent : 'var(--text-primary)',
-        transition: 'color 100ms ease',
-        lineHeight: 1,
-        padding: '14px 44px',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        touchAction: 'manipulation',
-        willChange: 'transform',
-      }}
-    >
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '14px',
-          background: `${mode.accent}18`,
-          boxShadow: `0 4px 32px ${mode.accent}30`,
-          opacity: active ? 1 : 0,
-          transition: 'opacity 100ms ease',
-          pointerEvents: 'none',
-        }}
-      />
-      {mode.name}
-    </button>
+    <>
+      <style>{`
+        .mdm-addons-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: var(--space-6);
+        }
+        @media (min-width: 768px) {
+          .mdm-addons-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+        .mdm-addon-card {
+          transition: border-color var(--dur-fast) var(--ease-out),
+            transform var(--dur-fast) var(--ease-out);
+        }
+        .mdm-addon-card:hover {
+          border-color: rgba(124, 58, 237, 0.4);
+          transform: translateY(-2px);
+        }
+      `}</style>
+
+      <div className="mdm-addons-grid">
+        {allToppings.map((topping, index) => {
+          const added = addedIndex === index
+          return (
+            <div
+              key={topping.name}
+              className="mdm-addon-card"
+              style={{
+                background: 'var(--surface-white)',
+                border: '1px solid #E5E5E5',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px',
+                minHeight: '88px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-dm-sans)',
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'var(--text-tertiary)',
+                }}
+              >
+                {topping.category}
+              </span>
+
+              <span
+                style={{
+                  fontFamily: 'var(--font-dm-sans)',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  color: 'var(--text-primary)',
+                  lineHeight: 1.25,
+                }}
+              >
+                {topping.name}
+              </span>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  marginTop: 'auto',
+                  paddingTop: '8px',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-syne)',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    color: 'var(--brand-purple-light)',
+                  }}
+                >
+                  ${topping.price.toFixed(2)}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => onAdd(index)}
+                  aria-label={`Note ${topping.name} to add at checkout`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '36px',
+                    padding: '6px 16px',
+                    border: '1px solid var(--brand-purple-light)',
+                    borderRadius: 'var(--radius-full)',
+                    background: added ? 'var(--brand-purple-light)' : 'transparent',
+                    color: added ? 'var(--surface-white)' : 'var(--brand-purple-light)',
+                    fontFamily: 'var(--font-dm-sans)',
+                    fontWeight: 500,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition:
+                      'background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out)',
+                  }}
+                >
+                  {added ? '✓ Added' : '+ Add'}
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </>
   )
 }

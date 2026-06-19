@@ -1,112 +1,126 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useCart } from '@/lib/cart'
-import { getSupabase } from '@/lib/supabase'
+
+const lightRoutes = ['/refunds', '/shipping', '/privacy', '/terms', '/cart']
 
 export default function Nav() {
-  const { itemCount, openCart } = useCart()
-  const [signedIn, setSignedIn] = useState(false)
+  const pathname = usePathname()
+  const { count, openCart } = useCart()
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const supabase = getSupabase()
-    if (!supabase) return
-    supabase.auth.getUser().then(({ data }) => setSignedIn(!!data.user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSignedIn(!!session?.user)
-    })
-    return () => subscription.unsubscribe()
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const isLight = lightRoutes.includes(pathname)
+  const textColor = scrolled ? '#fff' : isLight ? 'var(--text-primary)' : '#fff'
 
   return (
     <header
-      className="sticky top-0 z-40 flex items-center justify-between px-6"
       style={{
-        height: '56px',
-        backgroundColor: 'var(--off-white)',
-        borderBottom: '1px solid var(--mid-gray)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 'var(--space-4)',
+        background: scrolled ? 'rgba(0,0,0,0.6)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+        transition:
+          'background var(--dur-base) var(--ease-out), backdrop-filter var(--dur-base) var(--ease-out)',
       }}
     >
       <Link
         href="/"
         style={{
-          fontSize: 'var(--text-base)',
-          fontWeight: 400,
-          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-syne)',
+          fontWeight: 800,
+          fontSize: '18px',
+          color: textColor,
           textDecoration: 'none',
+          lineHeight: 1,
           letterSpacing: '-0.01em',
+          transition: 'color var(--dur-base) var(--ease-out)',
         }}
       >
         Monster Depot
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-      {signedIn && (
-        <Link
-          href="/account"
-          aria-label="Account"
-          style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="9" cy="6" r="3.25" stroke="currentColor" strokeWidth="1.25" />
-            <path
-              d="M3.5 15.5c.7-2.9 2.9-4.5 5.5-4.5s4.8 1.6 5.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.25"
-              strokeLinecap="round"
-            />
-          </svg>
-        </Link>
-      )}
       <button
+        type="button"
         onClick={openCart}
-        aria-label={`Cart${itemCount > 0 ? `, ${itemCount} items` : ''}`}
+        aria-label="Open cart"
         style={{
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
+          justifyContent: 'center',
+          minWidth: '44px',
+          minHeight: '44px',
+          padding: 0,
+          margin: 0,
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: 'var(--text-primary)',
-          fontSize: 'var(--text-sm)',
-          fontWeight: 400,
-          letterSpacing: '-0.01em',
+          color: textColor,
+          transition: 'color var(--dur-base) var(--ease-out)',
         }}
       >
         <svg
-          width="18"
-          height="18"
-          viewBox="0 0 18 18"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
           fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          focusable="false"
         >
-          <path
-            d="M6 6.5V5a3 3 0 1 1 6 0v1.5"
-            stroke="currentColor"
-            strokeWidth="1.25"
-            strokeLinecap="round"
-          />
-          <path
-            d="M2.5 6.5h13l-1.25 9H3.75L2.5 6.5z"
-            stroke="currentColor"
-            strokeWidth="1.25"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M5 7h14l-1.2 12.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8L5 7Z" />
+          <path d="M8.5 7V5.5a3.5 3.5 0 0 1 7 0V7" />
         </svg>
-        {itemCount > 0 && (
-          <span style={{ color: 'var(--text-primary)' }}>{itemCount}</span>
-        )}
+
+        <span
+          aria-hidden={count === 0}
+          style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            width: '18px',
+            height: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--brand-purple-light)',
+            color: '#fff',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 700,
+            fontSize: '10px',
+            lineHeight: 1,
+            pointerEvents: 'none',
+            opacity: count > 0 ? 1 : 0,
+            transform: count > 0 ? 'scale(1)' : 'scale(0)',
+            animation:
+              count > 0 ? 'badgePop var(--dur-base) var(--ease-spring)' : 'none',
+          }}
+        >
+          {count}
+        </span>
       </button>
-      </div>
     </header>
   )
 }

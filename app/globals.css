@@ -3,133 +3,258 @@
 @tailwind utilities;
 
 :root {
-  /* Base palette */
-  --white: #ffffff;
-  --off-white: #fafaf8;
-  --light-gray: #f2f2f0;
-  --mid-gray: #e0ded8;
-  --text-primary: #1a1a1a;
-  --text-secondary: #666666;
-  --text-tertiary: #b8b6b0;
-
-  /* Brand */
+  /* Brand purples */
   --brand-purple-dark:  #2D1B69;
   --brand-purple-light: #7C3AED;
 
-  /* Mode accents */
-  --lift: #d4a853;
-  --social: #c4788a;
-  --ease: #8a9bb5;
-  --focus: #7baf8e;
-  --drive: #a03040;
+  /* Flavor worlds */
+  --blueberry-bg:        #1A0A3B;
+  --blueberry-text:      #FFFFFF;
+  --blueberry-accent:    #C084FC;
+  --monster-bg:          #0A1F5C;
+  --monster-bg-end:      #3B0764;
+  --monster-text:        #000000;
+  --monster-accent:      #7C3AED;
+  --vanilla-bg:          #92400E;
+  --vanilla-text:        #000000;
+  --vanilla-accent:      #FEF3C7;
+  --fritter-bg:          #78350F;
+  --fritter-text:        #000000;
+  --fritter-accent:      #84CC16;
+  --strawberry-bg:       #881337;
+  --strawberry-text:     #FFFFFF;
+  --strawberry-accent:   #FEE2E2;
 
-  /* Type scale */
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-base: 15px;
-  --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 32px;
-  --text-3xl: 48px;
-  --text-4xl: 64px;
+  /* Surfaces */
+  --surface-white:       #FFFFFF;
+  --surface-off:         #FAFAF8;
+
+  /* Text */
+  --text-primary:        #1A1A1A;
+  --text-secondary:      #6B7280;
+  --text-tertiary:       #9CA3AF;
+  --text-disabled:       #D1D5DB;
+
+  /* Spacing — multiples of 4 only */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Border radius */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+  --radius-full: 9999px;
+
+  /* Motion */
+  --ease-out:    cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-instant: 80ms;
+  --dur-fast:    150ms;
+  --dur-base:    250ms;
+  --dur-slow:    400ms;
 }
 
-html,
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: var(--off-white);
-  color: var(--text-primary);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: var(--text-base);
+  font-weight: 400;
+  font-size: 16px;
   line-height: 1.6;
-  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  background-color: var(--surface-white);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  /* Remove iOS/Android default blue tap flash */
-  -webkit-tap-highlight-color: transparent;
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-syne), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
-/* Kill 300ms tap delay everywhere */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 button,
 a[href],
 [role="button"] {
   touch-action: manipulation;
 }
 
-/* Universal press/tap feedback — scale only so dark buttons don't go see-through */
-button:not(:disabled):active,
-a[href]:active,
-[role="button"]:active {
-  transform: scale(0.96);
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--brand-purple-light);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
+/* Skip-to-content link for keyboard users */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  background: var(--brand-purple-dark);
+  color: #fff;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+}
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+}
 
+/* ---- Keyframes (the complete, closed animation set) ---- */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-
 @keyframes fadeOut {
-  from {
-    opacity: 1;
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUpSm {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes sheetDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.35; }
+}
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes badgePop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes bgExpand {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ---- Animation utility classes ---- */
+.anim-fade-in    { animation: fadeIn var(--dur-base) ease both; }
+.anim-fade-up    { animation: fadeUp 500ms var(--ease-out) both; }
+.anim-fade-up-sm { animation: fadeUpSm 300ms var(--ease-out) both; }
+.overlay-enter   { animation: fadeIn 200ms ease forwards; }
+.overlay-exit    { animation: fadeOut 200ms ease forwards; }
+.sheet-enter     { animation: sheetUp var(--dur-base) var(--ease-out) forwards; }
+.sheet-exit      { animation: sheetDown 250ms ease-in forwards; }
+
+/* Shimmering ✦ on the subscription hook */
+.shimmer-star {
+  background: linear-gradient(
+    90deg,
+    var(--brand-purple-light) 0%,
+    #ffffff 50%,
+    var(--brand-purple-light) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+/*
+  Text scrim — used only on the three dark flavor worlds whose text token is
+  #000000 (Monster Cake, Vanilla, Apple Fritter). A soft light glow sits behind
+  the headline + hook so black text stays legible without altering brand colors.
+*/
+.text-scrim {
+  position: relative;
+}
+.text-scrim::before {
+  content: "";
+  position: absolute;
+  inset: -20px -28px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.32) 45%,
+    rgba(255, 255, 255, 0) 72%
+  );
+  filter: blur(10px);
+  z-index: 0;
+  pointer-events: none;
+}
+.text-scrim > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hide scrollbars on horizontal snap rows (Three Ways, etc.) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Respect reduced-motion: collapse every animation/transition */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes slideUpSheet {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDownSheet {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-
-.page-enter {
-  animation: fadeIn 120ms ease forwards;
-}
-
-.page-exit {
-  animation: fadeOut 200ms ease forwards;
-}
-
-.sheet-enter {
-  animation: slideUpSheet 300ms ease-out forwards;
-}
-
-.sheet-exit {
-  animation: slideDownSheet 250ms ease-in forwards;
-}
-
-/* Divider */
-.divider {
-  height: 1px;
-  background-color: var(--mid-gray);
-  width: 100%;
-}
-
-/* Ingredient accordion height transition */
-.accordion-content {
-  overflow: hidden;
-  transition: height 250ms ease;
 }

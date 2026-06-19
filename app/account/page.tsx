@@ -3,19 +3,22 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
-import { useCart } from '@/lib/cart'
-import { getModeBySlug } from '@/lib/products'
+import { useCart, type CartFormat } from '@/lib/cart'
+import { getFlavor } from '@/lib/products'
+
+interface OrderTopping {
+  name: string
+  price_cents: number
+}
 
 interface OrderItem {
-  mode: string
-  modeName: string
-  flavor: string
-  format: 'stick' | 'rtd'
+  slug: string
+  name: string
+  format: CartFormat
   formatLabel: string
-  size: string
-  sizeLabel: string
-  quantity: number
-  unit_price_cents: number
+  base_cents: number
+  toppings: OrderTopping[]
+  line_cents: number
 }
 
 interface Order {
@@ -45,10 +48,10 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const sectionLabel: React.CSSProperties = {
-  fontSize: 'var(--text-xs)',
+  fontSize: '11px',
   color: 'var(--text-tertiary)',
   textTransform: 'uppercase',
-  letterSpacing: '0.08em',
+  letterSpacing: '0.1em',
   marginBottom: '20px',
 }
 
@@ -56,12 +59,15 @@ const linkButton: React.CSSProperties = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  fontSize: 'var(--text-sm)',
+  fontSize: '13px',
   color: 'var(--text-secondary)',
   textDecoration: 'underline',
   textUnderlineOffset: '3px',
   fontFamily: 'inherit',
-  padding: 0,
+  minHeight: '44px',
+  padding: '11px 0',
+  display: 'inline-flex',
+  alignItems: 'center',
 }
 
 export default function AccountPage() {
@@ -116,26 +122,19 @@ export default function AccountPage() {
   }, [supabase, router])
 
   const reorder = useCallback((order: Order) => {
-    for (const item of order.items) {
-      const accent = getModeBySlug(item.mode)?.accent ?? '#1A1A1A'
-      const id = `${item.mode}-${item.flavor}-${item.format}-${item.size}`
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-      for (let i = 0; i < item.quantity; i++) {
-        addItem({
-          id,
-          mode: item.mode,
-          modeName: item.modeName,
-          modeAccent: accent,
-          flavor: item.flavor,
-          format: item.format,
-          formatLabel: item.formatLabel,
-          size: item.size,
-          sizeLabel: item.sizeLabel,
-          price: item.unit_price_cents / 100,
-        })
-      }
-    }
+    order.items.forEach((item, i) => {
+      const flavor = getFlavor(item.slug)
+      addItem({
+        id: `${item.slug}-${item.format}-${Date.now()}-${i}`,
+        slug: item.slug,
+        name: item.name,
+        format: item.format,
+        price: item.base_cents / 100,
+        toppings: (item.toppings ?? []).map((t) => ({ name: t.name, price: t.price_cents / 100 })),
+        bg: flavor?.bg ?? 'var(--brand-purple-dark)',
+        accent: flavor?.accent ?? 'var(--brand-purple-light)',
+      })
+    })
     openCart()
   }, [addItem, openCart])
 
@@ -168,7 +167,7 @@ export default function AccountPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     border: 'none',
-    borderBottom: '1px solid var(--mid-gray)',
+    borderBottom: '1px solid #E5E5E5',
     borderRadius: 0,
     padding: '10px 0',
     fontSize: '15px',
@@ -181,20 +180,21 @@ export default function AccountPage() {
 
   if (!loaded) {
     return (
-      <div style={{ minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--text-tertiary)', animation: 'pulse 1s ease-in-out infinite' }} />
+      <div style={{ minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--brand-purple-light)', animation: 'acctPulse 1s ease-in-out infinite' }} />
+        <style>{`@keyframes acctPulse { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }`}</style>
       </div>
     )
   }
 
   return (
-    <main className="page-enter" style={{ maxWidth: '640px', margin: '0 auto', padding: '64px 24px 96px' }}>
+    <main style={{ maxWidth: '640px', margin: '0 auto', padding: '120px 24px 96px', minHeight: '100svh', background: 'var(--surface-white)' }}>
       <h1
         style={{
-          fontFamily: 'var(--font-cormorant)',
-          fontSize: 'var(--text-2xl)',
-          fontWeight: 300,
-          letterSpacing: '0.02em',
+          fontFamily: 'var(--font-syne)',
+          fontWeight: 800,
+          fontSize: '28px',
+          letterSpacing: '-0.02em',
           color: 'var(--text-primary)',
           marginBottom: '56px',
         }}
@@ -204,38 +204,38 @@ export default function AccountPage() {
 
       {/* Orders */}
       <section style={{ marginBottom: '64px' }}>
-        <p style={sectionLabel}>Your Orders</p>
+        <p style={sectionLabel}>Your orders</p>
         {orders.length === 0 ? (
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
             No orders yet.
           </p>
         ) : (
           orders.map((order) => (
             <div
               key={order.id}
-              style={{ padding: '20px 0', borderBottom: '1px solid var(--mid-gray)' }}
+              style={{ padding: '20px 0', borderBottom: '1px solid #E5E5E5' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', fontWeight: 500 }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                   #{order.id.slice(-8).toUpperCase()}
                 </span>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                   {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   {'  ·  '}
                   {STATUS_LABELS[order.status] ?? order.status}
                 </span>
               </div>
               {order.items.map((item, i) => (
-                <p key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  {item.flavor} {item.modeName} · {item.sizeLabel}
-                  {item.quantity > 1 ? ` ×${item.quantity}` : ''}
+                <p key={i} style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  {item.name} · {item.formatLabel}
+                  {item.toppings?.length ? ` (+${item.toppings.length})` : ''}
                 </p>
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                <span style={{ fontSize: 'var(--text-base)', fontWeight: 500, letterSpacing: '-0.02em' }}>
+                <span style={{ fontSize: '16px', fontWeight: 500, letterSpacing: '-0.01em' }}>
                   ${(order.total / 100).toFixed(2)}
                 </span>
-                <button onClick={() => reorder(order)} style={linkButton}>
+                <button onClick={() => reorder(order)} style={{ ...linkButton, color: 'var(--brand-purple-light)' }}>
                   Reorder →
                 </button>
               </div>
@@ -246,7 +246,7 @@ export default function AccountPage() {
 
       {/* Address */}
       <section style={{ marginBottom: '64px' }}>
-        <p style={sectionLabel}>Shipping Address</p>
+        <p style={sectionLabel}>Shipping address</p>
         {editing ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '400px' }}>
             <input placeholder="Full name" value={addr.full_name} onChange={(e) => setAddr({ ...addr, full_name: e.target.value })} style={inputStyle} />
@@ -265,13 +265,13 @@ export default function AccountPage() {
         ) : (
           <>
             {profile?.shipping_address1 ? (
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '16px' }}>
                 <p style={{ color: 'var(--text-primary)' }}>{profile.full_name}</p>
                 <p>{profile.shipping_address1}{profile.shipping_address2 ? `, ${profile.shipping_address2}` : ''}</p>
                 <p>{profile.shipping_city}, {profile.shipping_state} {profile.shipping_zip}</p>
               </div>
             ) : (
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                 No saved address.
               </p>
             )}
@@ -282,13 +282,13 @@ export default function AccountPage() {
 
       {/* Email preferences */}
       <section style={{ marginBottom: '80px' }}>
-        <p style={sectionLabel}>Email Preferences</p>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: 'var(--text-sm)', color: 'var(--text-primary)', cursor: 'pointer', marginBottom: '20px' }}>
+        <p style={sectionLabel}>Email preferences</p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--text-primary)', cursor: 'pointer', marginBottom: '20px' }}>
           <input
             type="checkbox"
             checked={optIn}
             onChange={(e) => setOptIn(e.target.checked)}
-            style={{ accentColor: '#1A1A1A', width: '15px', height: '15px' }}
+            style={{ accentColor: 'var(--brand-purple-light)', width: '15px', height: '15px' }}
           />
           New flavors and session drops
         </label>
@@ -296,7 +296,7 @@ export default function AccountPage() {
       </section>
 
       {savedNote && (
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
           {savedNote}
         </p>
       )}

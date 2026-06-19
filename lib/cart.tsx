@@ -8,80 +8,92 @@ import {
   ReactNode,
 } from 'react'
 
-export interface CartItem {
-  id: string
-  mode: string
-  modeName: string
-  modeAccent: string
-  flavor: string
-  format: 'stick' | 'rtd'
-  formatLabel: string
-  size: string
-  sizeLabel: string
+export type CartFormat = 'single' | '7pack' | 'mixmatch7' | 'weekly-sub'
+
+export interface CartTopping {
+  name: string
   price: number
-  quantity: number
+}
+
+export interface CartItem {
+  id: string // unique: `${slug}-${format}-${timestamp}`
+  slug: string
+  name: string
+  format: CartFormat
+  price: number
+  toppings: CartTopping[]
+  bg: string
+  accent: string
+}
+
+export const FORMAT_LABELS: Record<CartFormat, string> = {
+  single: 'Single',
+  '7pack': '7-pack',
+  mixmatch7: 'Mix & Match 7-pack',
+  'weekly-sub': 'Weekly subscription',
+}
+
+export function itemTotal(item: CartItem): number {
+  return item.price + item.toppings.reduce((s, t) => s + t.price, 0)
 }
 
 interface CartContextValue {
-  items: CartItem[]
-  addItem: (item: Omit<CartItem, 'quantity'>) => void
+  cart: CartItem[]
+  addItem: (item: CartItem) => void
   removeItem: (id: string) => void
+  removeTopping: (id: string, toppingIndex: number) => void
   clearCart: () => void
   isOpen: boolean
   openCart: () => void
   closeCart: () => void
   total: number
-  itemCount: number
+  count: number
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
 
-  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === newItem.id)
-      if (existing) {
-        return prev.map((i) =>
-          i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      }
-      return [...prev, { ...newItem, quantity: 1 }]
-    })
+  // Each add is a distinct line (id carries a timestamp), so configurations
+  // with different toppings don't collapse into one another.
+  const addItem = useCallback((item: CartItem) => {
+    setCart((prev) => [...prev, item])
   }, [])
 
   const removeItem = useCallback((id: string) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === id)
-      if (!existing) return prev
-      if (existing.quantity > 1) {
-        return prev.map((i) =>
-          i.id === id ? { ...i, quantity: i.quantity - 1 } : i
-        )
-      }
-      return prev.filter((i) => i.id !== id)
-    })
+    setCart((prev) => prev.filter((i) => i.id !== id))
   }, [])
 
-  const clearCart = useCallback(() => setItems([]), [])
+  const removeTopping = useCallback((id: string, toppingIndex: number) => {
+    setCart((prev) =>
+      prev.map((i) =>
+        i.id === id
+          ? { ...i, toppings: i.toppings.filter((_, idx) => idx !== toppingIndex) }
+          : i
+      )
+    )
+  }, [])
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0)
+  const clearCart = useCallback(() => setCart([]), [])
+
+  const total = cart.reduce((sum, i) => sum + itemTotal(i), 0)
+  const count = cart.length
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        cart,
         addItem,
         removeItem,
+        removeTopping,
         clearCart,
         isOpen,
         openCart: () => setIsOpen(true),
         closeCart: () => setIsOpen(false),
         total,
-        itemCount,
+        count,
       }}
     >
       {children}

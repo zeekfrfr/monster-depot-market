@@ -10,15 +10,64 @@ const SQUARE_BASE = {
   production: 'https://connect.squareup.com',
 }
 
-interface CartItem {
-  mode: string
-  modeName: string
-  flavor: string
+// ---- Trusted server-side catalog (mirrors lib/products.ts). ----
+// Browser-supplied prices are IGNORED; every line is recomputed here so totals
+// cannot be tampered with from the client.
+const FLAVORS: Record<string, string> = {
+  'blueberry-cake-donut': 'Blueberry Cake Donut',
+  'monster-cake': 'Monster Cake',
+  'vanilla-honey-crumble': 'Vanilla Honey Crumble',
+  'apple-fritter': 'Apple Fritter',
+  'strawberry-shortcake': 'Strawberry Shortcake',
+}
+
+// Base price in cents by pouch format.
+const FORMAT_CENTS: Record<string, number> = {
+  single: 899,
+  '7pack': 2999,
+  mixmatch7: 3199,
+}
+
+const WEEKLY_SUB_CENTS = 2799
+
+const FORMAT_LABELS: Record<string, string> = {
+  single: 'Single',
+  '7pack': '7-pack',
+  mixmatch7: 'Mix & Match 7-pack',
+  'weekly-sub': 'Weekly subscription',
+}
+
+// Every purchasable topping and its price in cents.
+const TOPPING_CENTS: Record<string, number> = {
+  'Vanilla cream drizzle': 99,
+  'Caramel drizzle': 89,
+  'Honey drizzle': 89,
+  'Strawberry jam reserve': 129,
+  'Blueberry jam reserve': 129,
+  'Almond crumble': 99,
+  'Walnut crumble': 99,
+  'Pecan crumble': 99,
+  'Vanilla crumble': 79,
+  'Cinnamon sugar packet': 79,
+  'Freeze dried blueberries': 99,
+  'Freeze dried strawberries': 99,
+  'Extra freeze dried blueberries': 99,
+  'Extra freeze dried strawberries': 99,
+  'Extra honey packet': 89,
+  'Extra crumble packet': 79,
+  'Extra cinnamon sugar': 79,
+}
+
+interface IncomingTopping {
+  name: string
+  price?: number
+}
+
+interface IncomingItem {
+  slug: string
+  name?: string
   format: string
-  formatLabel: string
-  size: string
-  sizeLabel: string
-  quantity: number
+  toppings?: IncomingTopping[]
 }
 
 interface Shipping {
@@ -44,67 +93,100 @@ function ok(data: object): Response {
   )
 }
 
+// Returns the priced line item, or an error string if the item is invalid.
+function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: number } | { error: string } {
+  const format = item.format
+  if (!FORMAT_LABELS[format]) return { error: `Unknown format: ${format}` }
+
+  // Subscription is a flat one-time charge for launch (no recurring billing).
+  if (format === 'weekly-sub') {
+    return {
+      cents: WEEKLY_SUB_CENTS,
+      line: {
+        slug: 'weekly-sub',
+        name: item.name ?? 'Weekly Subscription',
+        format,
+        formatLabel: FORMAT_LABELS[format],
+        base_cents: WEEKLY_SUB_CENTS,
+        toppings: [],
+        line_cents: WEEKLY_SUB_CENTS,
+      },
+    }
+  }
+
+  // Pouch formats must reference a real flavor.
+  const flavorName = FLAVORS[item.slug]
+  if (!flavorName) return { error: `Unknown flavor: ${item.slug}` }
+
+  const base = FORMAT_CENTS[format]
+  if (base === undefined) return { error: `Unknown format: ${format}` }
+
+  // Price toppings from the trusted map; reject anything unrecognized.
+  const toppings: { name: string; price_cents: number }[] = []
+  let toppingCents = 0
+  for (const t of item.toppings ?? []) {
+    const tc = TOPPING_CENTS[t?.name]
+    if (tc === undefined) return { error: `Unknown topping: ${t?.name}` }
+    toppings.push({ name: t.name, price_cents: tc })
+    toppingCents += tc
+  }
+
+  const lineCents = base + toppingCents
+  return {
+    cents: lineCents,
+    line: {
+      slug: item.slug,
+      name: flavorName,
+      format,
+      formatLabel: FORMAT_LABELS[format],
+      base_cents: base,
+      toppings,
+      line_cents: lineCents,
+    },
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
-  // Parse body
-  let token: string, cartItems: CartItem[], shipping: Shipping, email: string, userId: string | undefined
+  let token: string, cartItems: IncomingItem[], shipping: Shipping, email: string, userId: string | undefined
   try {
     ;({ token, cartItems, shipping, email, userId } = await req.json())
   } catch {
     return err(400, 'Invalid request body.')
   }
 
-  // userId is optional (guest checkout leaves it undefined); reject junk values
+  // userId is optional (guest checkout leaves it undefined); reject junk values.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (userId !== undefined && (typeof userId !== 'string' || !UUID_RE.test(userId))) {
     userId = undefined
   }
 
-  // Validate inputs
   if (!token) return err(400, 'Missing card token.')
   if (!email || !email.includes('@')) return err(400, 'Valid email required.')
-  if (!cartItems?.length) return err(400, 'Cart is empty.')
+  if (!Array.isArray(cartItems) || cartItems.length === 0) return err(400, 'Cart is empty.')
   if (!shipping?.name || !shipping?.address1 || !shipping?.city || !shipping?.state || !shipping?.zip) {
     return err(400, 'Incomplete shipping details.')
   }
 
-  // Supabase client with service-role key (bypasses RLS)
+  // Recompute every line server-side.
+  const orderItems: Record<string, unknown>[] = []
+  let totalCents = 0
+  for (const item of cartItems) {
+    const priced = priceItem(item)
+    if ('error' in priced) return err(400, priced.error)
+    orderItems.push(priced.line)
+    totalCents += priced.cents
+  }
+
+  if (totalCents <= 0) return err(400, 'Order total must be greater than zero.')
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // Recompute total server-side from products table
-  const catalogKeys = [...new Set(cartItems.map(i => `${i.mode}-${i.format}-${i.size}`))]
-  const { data: products, error: dbErr } = await supabase
-    .from('products')
-    .select('catalog_key, price_cents')
-    .in('catalog_key', catalogKeys)
-    .eq('status', 'active')
-
-  if (dbErr || !products?.length) {
-    console.error('Products lookup failed:', dbErr)
-    return err(500, 'Could not load product catalog.')
-  }
-
-  const priceMap = new Map(products.map(p => [p.catalog_key as string, p.price_cents as number]))
-
-  // Verify every cart item exists in catalog
-  for (const item of cartItems) {
-    const key = `${item.mode}-${item.format}-${item.size}`
-    if (!priceMap.has(key)) return err(400, `Unknown product: ${key}`)
-    if ((item.quantity ?? 0) < 1) return err(400, `Invalid quantity for ${key}`)
-  }
-
-  // Server-computed total — browser total is ignored
-  const totalCents = cartItems.reduce((sum, item) => {
-    return sum + priceMap.get(`${item.mode}-${item.format}-${item.size}`)! * item.quantity
-  }, 0)
-
-  if (totalCents <= 0) return err(400, 'Order total must be greater than zero.')
-
-  // Select Square credentials by environment
+  // Select Square credentials by environment.
   const env = (Deno.env.get('SQUARE_ENVIRONMENT') ?? 'sandbox') as 'sandbox' | 'production'
   const isProd = env === 'production'
   const accessToken = Deno.env.get(isProd ? 'SQUARE_PROD_ACCESS_TOKEN' : 'SQUARE_SANDBOX_ACCESS_TOKEN')
@@ -112,7 +194,6 @@ Deno.serve(async (req) => {
 
   if (!accessToken || !locationId) return err(503, 'Payment not configured.')
 
-  // Charge Square
   const squareRes = await fetch(`${SQUARE_BASE[env]}/v2/payments`, {
     method: 'POST',
     headers: {
@@ -140,22 +221,8 @@ Deno.serve(async (req) => {
 
   const squarePaymentId = squareData.payment!.id
 
-  // Build enriched line items for the order record
-  const orderItems = cartItems.map(item => ({
-    mode: item.mode,
-    modeName: item.modeName,
-    flavor: item.flavor,
-    format: item.format,
-    formatLabel: item.formatLabel,
-    size: item.size,
-    sizeLabel: item.sizeLabel,
-    quantity: item.quantity,
-    unit_price_cents: priceMap.get(`${item.mode}-${item.format}-${item.size}`)!,
-  }))
-
-  // Write order — service-role key bypasses RLS.
-  // user_id only included when a logged-in user checked out, so guest
-  // inserts keep working even before the user_id column migration runs.
+  // Write order — service-role key bypasses RLS. user_id only included when a
+  // logged-in user checked out, so guest inserts keep working.
   const { data: order, error: insertErr } = await supabase
     .from('orders')
     .insert({
@@ -177,12 +244,11 @@ Deno.serve(async (req) => {
     .single()
 
   if (insertErr || !order) {
-    // Payment succeeded — log and return Square payment ID so the order can be manually recovered
     console.error('Order DB write failed after successful charge:', insertErr, 'square_payment_id:', squarePaymentId)
     return ok({ orderId: squarePaymentId, status: 'SUCCESS', _warn: 'db_write_failed' })
   }
 
-  // Fire-and-forget: send confirmation + admin alert
+  // Fire-and-forget: confirmation + admin alert.
   const notifyUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-order-notification`
   fetch(notifyUrl, {
     method: 'POST',

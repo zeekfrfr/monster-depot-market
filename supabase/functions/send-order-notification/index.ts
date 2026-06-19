@@ -7,12 +7,19 @@ const POSTMARK_API = 'https://api.postmarkapp.com/email'
 const FROM_ADDRESS = 'Monster Depot <orders@monsterdepotmarket.com>'
 const ADMIN_EMAIL = 'monsterdepotmarketing@gmail.com'
 
+interface OrderTopping {
+  name: string
+  price_cents: number
+}
+
 interface OrderItem {
-  modeName: string
-  flavor: string
-  sizeLabel: string
-  quantity: number
-  unit_price_cents: number
+  slug: string
+  name: string
+  format: string
+  formatLabel: string
+  base_cents: number
+  toppings: OrderTopping[]
+  line_cents: number
 }
 
 interface Shipping {
@@ -31,6 +38,8 @@ interface Payload {
   totalCents: number
   shipping: Shipping
 }
+
+const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
 async function sendEmail(token: string, to: string, subject: string, text: string, html: string) {
   const res = await fetch(POSTMARK_API, {
@@ -89,15 +98,19 @@ Deno.serve(async (req) => {
     'US',
   ].filter(Boolean) as string[]
 
+  const toppingsInline = (i: OrderItem) =>
+    i.toppings.length ? i.toppings.map(t => `+ ${t.name}`).join(' · ') : ''
+
   // ── Customer confirmation ──────────────────────────────────
 
   const customerText = [
-    `Monster Depot — Order Confirmation`,
+    `Monster Depot Market — Order Confirmation`,
     `Order #${shortId}`,
     ``,
-    ...items.map(i =>
-      `${i.quantity}× ${i.modeName} ${i.sizeLabel} — ${i.flavor}  $${((i.unit_price_cents * i.quantity) / 100).toFixed(2)}`
-    ),
+    ...items.flatMap(i => [
+      `${i.name} — ${i.formatLabel}  ${dollars(i.line_cents)}`,
+      ...i.toppings.map(t => `   + ${t.name}  ${dollars(t.price_cents)}`),
+    ]),
     ``,
     `Total  $${totalDollars}`,
     ``,
@@ -106,7 +119,8 @@ Deno.serve(async (req) => {
     ``,
     `Your order ships within 3–5 business days.`,
     ``,
-    `Monster Depot`,
+    `Got Munchies?`,
+    `Monster Depot Market`,
   ].join('\n')
 
   const customerHtml = `<!DOCTYPE html>
@@ -115,35 +129,36 @@ Deno.serve(async (req) => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  body{font-family:'DM Sans',Arial,sans-serif;font-size:15px;color:#1A1A1A;background:#FAF9F6;margin:0;padding:0}
+  body{font-family:'DM Sans',Arial,sans-serif;font-size:15px;color:#1A1A1A;background:#FAFAF8;margin:0;padding:0}
   .wrap{max-width:560px;margin:0 auto;padding:48px 32px}
-  .brand{font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#8A8A8A;margin-bottom:40px}
-  h1{font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:0.08em;color:#8A8A8A;margin:0 0 4px}
-  .order-id{font-size:22px;font-weight:300;letter-spacing:0.06em;margin:0 0 40px}
+  .brand{font-size:20px;font-weight:800;letter-spacing:-0.02em;color:#2D1B69;margin-bottom:8px}
+  .tag{font-size:13px;color:#7C3AED;margin-bottom:40px}
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9CA3AF;margin:32px 0 8px}
+  .order-id{font-size:24px;font-weight:800;letter-spacing:-0.01em;margin:0 0 40px;color:#1A1A1A}
   table{width:100%;border-collapse:collapse;margin-bottom:24px}
   td{padding:12px 0;border-bottom:1px solid #E8E6E0;font-size:14px;vertical-align:top;line-height:1.5}
-  td:last-child{text-align:right;white-space:nowrap}
-  .flavor{color:#8A8A8A;font-size:13px}
-  .total-row td{border-bottom:none;font-weight:500;padding-top:20px}
-  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#8A8A8A;margin:32px 0 8px}
+  td:last-child{text-align:right;white-space:nowrap;font-weight:500}
+  .toppings{color:#6B7280;font-size:13px}
+  .total-row td{border-bottom:none;font-weight:800;padding-top:20px;color:#7C3AED}
   .ship-line{font-size:14px;line-height:1.7;margin:0}
-  .note{font-size:13px;color:#8A8A8A;margin-top:40px;line-height:1.7}
-  .footer{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#C8C5BC;margin-top:56px}
+  .note{font-size:13px;color:#6B7280;margin-top:40px;line-height:1.7}
+  .footer{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#9CA3AF;margin-top:56px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p class="brand">Monster Depot</p>
+  <p class="brand">Monster Depot Market</p>
+  <p class="tag">Got Munchies?</p>
   <p class="section-label">Order confirmation</p>
   <p class="order-id">#${shortId}</p>
   <table>
     ${items.map(i => `
     <tr>
       <td>
-        ${i.modeName} — ${i.sizeLabel}<br>
-        <span class="flavor">${i.flavor} · qty ${i.quantity}</span>
+        ${i.name} — ${i.formatLabel}
+        ${toppingsInline(i) ? `<br><span class="toppings">${toppingsInline(i)}</span>` : ''}
       </td>
-      <td>$${((i.unit_price_cents * i.quantity) / 100).toFixed(2)}</td>
+      <td>${dollars(i.line_cents)}</td>
     </tr>`).join('')}
     <tr class="total-row">
       <td>Total</td>
@@ -153,7 +168,7 @@ Deno.serve(async (req) => {
   <p class="section-label">Ships to</p>
   ${shippingLines.map(l => `<p class="ship-line">${l}</p>`).join('')}
   <p class="note">Your order ships within 3–5 business days.</p>
-  <p class="footer">Monster Depot</p>
+  <p class="footer">Monster Depot Market · 18+</p>
 </div>
 </body>
 </html>`
@@ -167,9 +182,10 @@ Deno.serve(async (req) => {
     `Email:    ${email}`,
     ``,
     `Items:`,
-    ...items.map(i =>
-      `  ${i.quantity}× ${i.modeName} ${i.sizeLabel} — ${i.flavor}  ($${((i.unit_price_cents * i.quantity) / 100).toFixed(2)})`
-    ),
+    ...items.flatMap(i => [
+      `  ${i.name} — ${i.formatLabel}  (${dollars(i.line_cents)})`,
+      ...i.toppings.map(t => `    + ${t.name}  (${dollars(t.price_cents)})`),
+    ]),
     ``,
     `Total: $${totalDollars}`,
     ``,

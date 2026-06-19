@@ -1,85 +1,97 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useCart } from '@/lib/cart'
-import { getSupabase } from '@/lib/supabase'
+import { useCart, FORMAT_LABELS, itemTotal, type CartItem } from '@/lib/cart'
 import PaymentSheet from './PaymentSheet'
 
+type View = 'cart' | 'payment' | 'confirmed'
+
 export default function CartSheet() {
-  const { items, removeItem, isOpen, closeCart, total, itemCount } = useCart()
-  const [isClosing, setIsClosing] = useState(false)
-  const [showPayment, setShowPayment] = useState(false)
-  const [orderConfirmed, setOrderConfirmed] = useState<{ orderId: string; email: string } | null>(null)
+  const {
+    cart,
+    removeItem,
+    removeTopping,
+    isOpen,
+    closeCart,
+    total,
+    count,
+  } = useCart()
+
+  const [view, setView] = useState<View>('cart')
+  const [confirm, setConfirm] = useState<{ orderId: string; email: string } | null>(null)
+
+  if (!isOpen) return null
 
   const handleClose = () => {
-    setIsClosing(true)
-    setTimeout(() => {
-      setIsClosing(false)
-      closeCart()
-      setShowPayment(false)
-      setOrderConfirmed(null)
-    }, 250)
+    closeCart()
+    // Reset for next open after the sheet has left the screen.
+    setView('cart')
+    setConfirm(null)
   }
-
-  const handleOrderSuccess = (orderId: string, email: string) => {
-    setOrderConfirmed({ orderId, email })
-    setShowPayment(false)
-  }
-
-  if (!isOpen && !isClosing) return null
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Overlay */}
       <div
-        className={isClosing ? 'page-exit' : 'page-enter'}
+        className="overlay-enter"
         onClick={handleClose}
+        aria-hidden="true"
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.18)',
-          zIndex: 40,
+          zIndex: 201,
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
         }}
       />
 
       {/* Sheet */}
       <div
-        className={isClosing ? 'sheet-exit' : 'sheet-enter'}
+        className="sheet-enter"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Your cart"
         style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 50,
-          backgroundColor: '#fff',
-          borderRadius: '16px 16px 0 0',
-          maxHeight: '90vh',
-          overflow: 'hidden',
+          zIndex: 202,
+          background: 'var(--surface-white)',
+          borderTopLeftRadius: 'var(--radius-xl)',
+          borderTopRightRadius: 'var(--radius-xl)',
+          maxHeight: '85svh',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
         }}
       >
-        {showPayment ? (
+        {view === 'payment' ? (
           <PaymentSheet
             total={total}
-            itemCount={itemCount}
-            onBack={() => setShowPayment(false)}
-            onSuccess={handleOrderSuccess}
+            count={count}
+            onBack={() => setView('cart')}
+            onSuccess={(orderId, email) => {
+              setConfirm({ orderId, email })
+              setView('confirmed')
+            }}
           />
-        ) : orderConfirmed ? (
-          <OrderConfirmation
-            orderId={orderConfirmed.orderId}
-            email={orderConfirmed.email}
+        ) : view === 'confirmed' && confirm ? (
+          <Confirmation
+            orderId={confirm.orderId}
+            email={confirm.email}
             onClose={handleClose}
           />
         ) : (
-          <CartContents
-            items={items}
-            removeItem={removeItem}
+          <CartView
+            cart={cart}
             total={total}
-            onCheckout={() => setShowPayment(true)}
-            onClose={handleClose}
+            removeItem={removeItem}
+            removeTopping={removeTopping}
+            onClose={closeCart}
+            onCheckout={() => setView('payment')}
           />
         )}
       </div>
@@ -87,19 +99,33 @@ export default function CartSheet() {
   )
 }
 
-function CartContents({
-  items,
-  removeItem,
+/* ─────────────────────────────  CART VIEW  ───────────────────────────── */
+
+function CartView({
+  cart,
   total,
-  onCheckout,
+  removeItem,
+  removeTopping,
   onClose,
+  onCheckout,
 }: {
-  items: ReturnType<typeof useCart>['items']
-  removeItem: (id: string) => void
+  cart: CartItem[]
   total: number
-  onCheckout: () => void
+  removeItem: (id: string) => void
+  removeTopping: (id: string, toppingIndex: number) => void
   onClose: () => void
+  onCheckout: () => void
 }) {
+  const empty = cart.length === 0
+
+  const scrollToWorlds = () => {
+    onClose()
+    // Defer until the overlay unmounts so the target is reachable.
+    requestAnimationFrame(() => {
+      document.getElementById('flavor-worlds')?.scrollIntoView({ behavior: 'smooth' })
+    })
+  }
+
   return (
     <>
       {/* Header */}
@@ -108,216 +134,347 @@ function CartContents({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '20px 24px 16px',
-          borderBottom: '1px solid var(--mid-gray)',
+          padding: 'var(--space-5) var(--space-6) var(--space-4)',
           flexShrink: 0,
         }}
       >
-        <span
+        <h2
           style={{
-            fontSize: 'var(--text-base)',
-            fontWeight: 500,
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 800,
+            fontSize: '22px',
             color: 'var(--text-primary)',
+            margin: 0,
+            letterSpacing: '-0.02em',
           }}
         >
-          Cart
-        </span>
+          Your cart
+        </h2>
         <button
           onClick={onClose}
+          aria-label="Close cart"
           style={{
-            background: 'none',
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            borderRadius: 'var(--radius-full)',
+            background: 'var(--surface-off)',
             border: 'none',
             cursor: 'pointer',
-            color: 'var(--text-tertiary)',
-            fontSize: '20px',
+            color: 'var(--text-primary)',
+            fontSize: '16px',
             lineHeight: 1,
-            padding: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             fontFamily: 'inherit',
           }}
-          aria-label="Close cart"
         >
           ✕
         </button>
       </div>
 
-      {/* Items */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
-        {items.length === 0 ? (
-          <p
+      {/* Items / Empty */}
+      <div
+        className="no-scrollbar"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: empty ? 0 : '0 var(--space-6)',
+        }}
+      >
+        {empty ? (
+          <div
             style={{
-              padding: '40px 0',
+              minHeight: '40svh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
               textAlign: 'center',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--text-tertiary)',
+              padding: 'var(--space-8) var(--space-6)',
+              gap: 'var(--space-4)',
             }}
           >
-            Your cart is empty.
-          </p>
-        ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
+            <span aria-hidden="true" style={{ fontSize: '52px', opacity: 0.16, lineHeight: 1 }}>
+              🛒
+            </span>
+            <p
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: '16px 0',
-                borderBottom: '1px solid var(--mid-gray)',
+                fontFamily: 'var(--font-dm-sans)',
+                fontWeight: 400,
+                fontSize: '16px',
+                color: 'var(--text-secondary)',
+                margin: 0,
               }}
             >
-              <div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '4px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 400,
-                      color: 'var(--text-primary)',
-                    }}
-                  >
-                    {item.flavor}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      fontWeight: 400,
-                      color: 'var(--text-tertiary)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                    }}
-                  >
-                    {item.modeName}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: 'var(--text-sm)',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  {item.formatLabel} · {item.sizeLabel}
-                  {item.quantity > 1 && (
-                    <span style={{ marginLeft: '8px', color: 'var(--text-tertiary)' }}>
-                      ×{item.quantity}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  flexShrink: 0,
-                  marginLeft: '16px',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 500,
-                    letterSpacing: '-0.02em',
-                    color: 'var(--text-primary)',
-                  }}
-                >
-                  ${(item.price * item.quantity).toFixed(2)}
-                </span>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--text-tertiary)',
-                    fontSize: '14px',
-                    padding: '4px',
-                    transition: 'color 150ms ease',
-                    fontFamily: 'inherit',
-                  }}
-                  onMouseEnter={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'
-                  }}
-                  onMouseLeave={(e) => {
-                    ;(e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'
-                  }}
-                  aria-label={`Remove ${item.flavor}`}
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
+              Nothing here yet.
+            </p>
+            <button
+              onClick={scrollToWorlds}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-dm-sans)',
+                fontWeight: 500,
+                fontSize: '15px',
+                color: 'var(--brand-purple-light)',
+                padding: 'var(--space-2)',
+                minHeight: '44px',
+              }}
+            >
+              Pick your pouch →
+            </button>
+          </div>
+        ) : (
+          cart.map((item) => (
+            <CartLine
+              key={item.id}
+              item={item}
+              onRemoveItem={() => removeItem(item.id)}
+              onRemoveTopping={(idx) => removeTopping(item.id, idx)}
+            />
           ))
         )}
       </div>
 
       {/* Footer */}
-      {items.length > 0 && (
+      <div
+        style={{
+          flexShrink: 0,
+          padding: 'var(--space-4) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom, 0px))',
+          borderTop: '1px solid var(--surface-off)',
+          background: 'var(--surface-white)',
+        }}
+      >
         <div
           style={{
-            padding: '16px 24px 32px',
-            borderTop: '1px solid var(--mid-gray)',
-            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            marginBottom: 'var(--space-3)',
           }}
         >
-          <div
+          <span
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '16px',
+              fontFamily: 'var(--font-dm-sans)',
+              fontWeight: 400,
+              fontSize: '14px',
+              color: 'var(--text-secondary)',
             }}
           >
-            <span style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)' }}>
-              Subtotal
-            </span>
-            <span
-              style={{
-                fontSize: 'var(--text-base)',
-                fontWeight: 500,
-                letterSpacing: '-0.02em',
-                color: 'var(--text-primary)',
-              }}
-            >
-              ${total.toFixed(2)}
-            </span>
-          </div>
-          <button
-            onClick={onCheckout}
+            Subtotal
+          </span>
+          <span
             style={{
-              width: '100%',
-              height: '52px',
-              backgroundColor: '#1A1A1A',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: 'var(--text-base)',
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              letterSpacing: '-0.01em',
-              transition: 'opacity 150ms ease',
-            }}
-            onMouseEnter={(e) => {
-              ;(e.currentTarget as HTMLElement).style.opacity = '0.85'
-            }}
-            onMouseLeave={(e) => {
-              ;(e.currentTarget as HTMLElement).style.opacity = '1'
+              fontFamily: 'var(--font-syne)',
+              fontWeight: 700,
+              fontSize: '20px',
+              letterSpacing: '-0.02em',
+              color: 'var(--text-primary)',
             }}
           >
-            Checkout
-          </button>
+            ${total.toFixed(2)}
+          </span>
         </div>
-      )}
+        <button
+          onClick={onCheckout}
+          disabled={empty}
+          style={{
+            width: '100%',
+            minHeight: '52px',
+            borderRadius: 'var(--radius-md)',
+            border: 'none',
+            background: empty ? 'var(--text-disabled)' : 'var(--brand-purple-light)',
+            color: '#FFFFFF',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 700,
+            fontSize: '16px',
+            cursor: empty ? 'default' : 'pointer',
+            transition: 'background-color var(--dur-fast) var(--ease-out)',
+          }}
+        >
+          Checkout →
+        </button>
+        <p
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 300,
+            fontSize: '12px',
+            color: 'var(--text-tertiary)',
+            textAlign: 'center',
+            margin: 'var(--space-3) 0 0',
+          }}
+        >
+          Free shipping on all subscriptions
+        </p>
+      </div>
     </>
   )
 }
 
-function OrderConfirmation({
+/* ─────────────────────────────  CART LINE  ───────────────────────────── */
+
+function CartLine({
+  item,
+  onRemoveItem,
+  onRemoveTopping,
+}: {
+  item: CartItem
+  onRemoveItem: () => void
+  onRemoveTopping: (toppingIndex: number) => void
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 'var(--space-3)',
+        padding: 'var(--space-4) 0',
+        borderBottom: '1px solid var(--surface-off)',
+      }}
+    >
+      {/* Accent dot */}
+      <span
+        aria-hidden="true"
+        style={{
+          width: '12px',
+          height: '12px',
+          minWidth: '12px',
+          borderRadius: 'var(--radius-full)',
+          background: item.accent,
+          marginTop: '5px',
+        }}
+      />
+
+      {/* Name + format + toppings */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 500,
+            fontSize: '15px',
+            color: 'var(--text-primary)',
+            lineHeight: 1.3,
+          }}
+        >
+          {item.name}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 300,
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            marginTop: '2px',
+          }}
+        >
+          {FORMAT_LABELS[item.format]}
+        </div>
+
+        {item.toppings.map((topping, idx) => (
+          <div
+            key={`${topping.name}-${idx}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              marginLeft: '20px',
+              marginTop: 'var(--space-2)',
+              fontFamily: 'var(--font-dm-sans)',
+              fontWeight: 300,
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <span style={{ flex: 1, minWidth: 0 }}>
+              + {topping.name}
+            </span>
+            <span style={{ whiteSpace: 'nowrap' }}>
+              ${topping.price.toFixed(2)}
+            </span>
+            <button
+              onClick={() => onRemoveTopping(idx)}
+              aria-label={`Remove topping ${topping.name}`}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-tertiary)',
+                fontSize: '12px',
+                lineHeight: 1,
+                minWidth: '24px',
+                minHeight: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'inherit',
+                padding: 0,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Price + remove item */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-3)',
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 600,
+            fontSize: '14px',
+            color: 'var(--text-primary)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ${itemTotal(item).toFixed(2)}
+        </span>
+        <button
+          onClick={onRemoveItem}
+          aria-label={`Remove ${item.name}`}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-tertiary)',
+            fontSize: '14px',
+            lineHeight: 1,
+            minWidth: '24px',
+            minHeight: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'inherit',
+            padding: 0,
+            transition: 'color var(--dur-fast) var(--ease-out)',
+          }}
+          onMouseEnter={(e) => {
+            ;(e.currentTarget as HTMLElement).style.color = '#EF4444'
+          }}
+          onMouseLeave={(e) => {
+            ;(e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)'
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────  CONFIRMATION  ─────────────────────────── */
+
+function Confirmation({
   orderId,
   email,
   onClose,
@@ -326,237 +483,94 @@ function OrderConfirmation({
   email: string
   onClose: () => void
 }) {
-  const router = useRouter()
-  const shortId = orderId.slice(-8).toUpperCase()
-
-  // Post-checkout soft account creation — never a wall, always skippable
-  const [showPassword, setShowPassword] = useState(false)
-  const [password, setPassword] = useState('')
-  const [optIn, setOptIn] = useState(true)
-  const [signupState, setSignupState] = useState<'idle' | 'loading' | 'sent' | 'exists' | 'error'>('idle')
-
-  const supabase = getSupabase()
-
-  const handleClose = () => {
-    onClose()
-    router.push('/')
-  }
-
-  const handleSignup = async () => {
-    if (!supabase || password.length < 8) return
-    setSignupState('loading')
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account&order_id=${orderId}&opt_in=${optIn ? '1' : '0'}`,
-      },
-    })
-    if (error) {
-      setSignupState('error')
-      return
-    }
-    // Supabase returns a user with no identities when the email is already registered
-    if (data.user && data.user.identities?.length === 0) {
-      setSignupState('exists')
-      return
-    }
-    setSignupState('sent')
-  }
-
-  const mutedText: React.CSSProperties = {
-    fontSize: 'var(--text-sm)',
-    fontWeight: 300,
-    color: 'var(--text-secondary)',
-    letterSpacing: '-0.01em',
-  }
-
   return (
     <div
+      className="no-scrollbar"
       style={{
-        padding: '56px 32px 48px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
-        gap: 0,
+        padding: 'var(--space-12) var(--space-6) calc(var(--space-10) + env(safe-area-inset-bottom, 0px))',
         overflowY: 'auto',
+        gap: 'var(--space-3)',
+        minHeight: '40svh',
       }}
     >
-      <p
+      <span aria-hidden="true" className="anim-fade-up-sm" style={{ fontSize: '48px', lineHeight: 1, marginBottom: 'var(--space-2)' }}>
+        🎉
+      </span>
+
+      <h2
         style={{
-          fontFamily: 'var(--font-cormorant)',
-          fontSize: 'var(--text-3xl)',
-          fontWeight: 300,
-          letterSpacing: '0.1em',
+          fontFamily: 'var(--font-syne)',
+          fontWeight: 800,
+          fontSize: '26px',
           color: 'var(--text-primary)',
-          lineHeight: 1.1,
-          marginBottom: '28px',
+          margin: 0,
+          letterSpacing: '-0.02em',
         }}
       >
         Order confirmed.
+      </h2>
+
+      <p
+        style={{
+          fontFamily: 'var(--font-syne)',
+          fontWeight: 700,
+          fontSize: '15px',
+          letterSpacing: '0.08em',
+          color: 'var(--brand-purple-light)',
+          margin: 0,
+        }}
+      >
+        #{orderId.slice(-8).toUpperCase()}
       </p>
 
       <p
         style={{
-          fontSize: 'var(--text-sm)',
+          fontFamily: 'var(--font-dm-sans)',
           fontWeight: 400,
+          fontSize: '15px',
           color: 'var(--text-secondary)',
-          letterSpacing: '-0.01em',
-          marginBottom: '8px',
+          margin: 'var(--space-2) 0 0',
         }}
       >
-        #{shortId}
-      </p>
-
-      <p style={{ ...mutedText, marginBottom: '4px' }}>
         Ships within 3–5 business days.
       </p>
 
       <p
         style={{
-          fontSize: 'var(--text-sm)',
+          fontFamily: 'var(--font-dm-sans)',
           fontWeight: 300,
+          fontSize: '14px',
           color: 'var(--text-tertiary)',
-          letterSpacing: '-0.01em',
-          marginBottom: '36px',
+          margin: 0,
+          lineHeight: 1.5,
+          maxWidth: '320px',
         }}
       >
         A confirmation has been sent to {email}.
       </p>
 
-      {supabase && (
-        <>
-          <div style={{ width: '100%', maxWidth: '320px', height: '1px', backgroundColor: 'var(--mid-gray)', marginBottom: '32px' }} />
-
-          {signupState === 'sent' ? (
-            <p style={{ ...mutedText, marginBottom: '36px', lineHeight: 1.6 }}>
-              Check your email to confirm your account.
-              <br />
-              Your order will be waiting in there.
-            </p>
-          ) : signupState === 'exists' ? (
-            <p style={{ ...mutedText, marginBottom: '36px', lineHeight: 1.6 }}>
-              You already have an account.{' '}
-              <a
-                href="/login"
-                style={{ color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
-              >
-                Sign in to track this order →
-              </a>
-            </p>
-          ) : (
-            <>
-              <p style={{ ...mutedText, marginBottom: '20px' }}>
-                Want to track this order and save your info?
-              </p>
-
-              {showPassword ? (
-                <div style={{ width: '100%', maxWidth: '320px', marginBottom: '36px' }}>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      fontSize: 'var(--text-sm)',
-                      color: 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      marginBottom: '16px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={optIn}
-                      onChange={(e) => setOptIn(e.target.checked)}
-                      style={{ accentColor: '#1A1A1A', width: '15px', height: '15px', flexShrink: 0 }}
-                    />
-                    Send me new flavors and session drops.
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Password (8+ characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    style={{
-                      width: '100%',
-                      border: 'none',
-                      borderBottom: '1px solid var(--mid-gray)',
-                      borderRadius: 0,
-                      padding: '12px 0',
-                      fontSize: '15px',
-                      fontFamily: 'inherit',
-                      background: 'transparent',
-                      color: 'var(--text-primary)',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      marginBottom: '20px',
-                    }}
-                  />
-                  {signupState === 'error' && (
-                    <p style={{ fontSize: 'var(--text-sm)', color: '#c0392b', marginBottom: '16px' }}>
-                      Could not create account. Please try again.
-                    </p>
-                  )}
-                  <button
-                    onClick={handleSignup}
-                    disabled={signupState === 'loading' || password.length < 8}
-                    style={{
-                      width: '100%',
-                      height: '48px',
-                      backgroundColor: signupState === 'loading' || password.length < 8 ? 'var(--mid-gray)' : '#1A1A1A',
-                      color: signupState === 'loading' || password.length < 8 ? 'var(--text-secondary)' : '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 500,
-                      cursor: signupState === 'loading' || password.length < 8 ? 'default' : 'pointer',
-                      fontFamily: 'inherit',
-                      transition: 'background-color 150ms ease',
-                    }}
-                  >
-                    {signupState === 'loading' ? 'Creating…' : 'Create account →'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowPassword(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 'var(--text-sm)',
-                    color: 'var(--text-primary)',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '3px',
-                    fontFamily: 'inherit',
-                    marginBottom: '36px',
-                  }}
-                >
-                  Create a password →
-                </button>
-              )}
-            </>
-          )}
-        </>
-      )}
-
       <button
-        onClick={handleClose}
+        onClick={onClose}
         style={{
-          background: 'none',
+          marginTop: 'var(--space-6)',
+          minHeight: '52px',
+          padding: '0 var(--space-8)',
+          borderRadius: 'var(--radius-md)',
           border: 'none',
+          background: 'var(--brand-purple-light)',
+          color: '#FFFFFF',
+          fontFamily: 'var(--font-syne)',
+          fontWeight: 700,
+          fontSize: '16px',
           cursor: 'pointer',
-          fontSize: 'var(--text-sm)',
-          color: 'var(--text-secondary)',
-          textDecoration: 'underline',
-          textUnderlineOffset: '3px',
-          fontFamily: 'inherit',
-          letterSpacing: '-0.01em',
         }}
       >
-        {signupState === 'sent' || signupState === 'exists' ? 'Close' : 'or continue without an account'}
+        Close
       </button>
     </div>
   )
