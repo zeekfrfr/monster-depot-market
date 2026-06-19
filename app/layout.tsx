@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Syne, DM_Sans } from 'next/font/google'
 import Script from 'next/script'
 import { CartProvider } from '@/lib/cart'
+import { SavedRecipesProvider } from '@/lib/savedRecipes'
 import AgeGate from '@/components/AgeGate'
 import Nav from '@/components/Nav'
 import CartSheet from '@/components/CartSheet'
@@ -41,11 +42,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="skip-link">Skip to main content</a>
         <Script src={squareSrc} strategy="lazyOnload" />
         <CartProvider>
-          <AgeGate />
-          <Nav />
-          <main id="main">{children}</main>
-          <Footer />
-          <CartSheet />
+          <SavedRecipesProvider>
+            <AgeGate />
+            <Nav />
+            <main id="main">{children}</main>
+            <Footer />
+            <CartSheet />
+          </SavedRecipesProvider>
         </CartProvider>
       </body>
     </html>

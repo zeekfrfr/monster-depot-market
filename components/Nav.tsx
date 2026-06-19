@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useCart } from '@/lib/cart'
+import { getSupabase } from '@/lib/supabase'
 
 const lightRoutes = ['/refunds', '/shipping', '/privacy', '/terms', '/cart']
 
@@ -11,12 +12,29 @@ export default function Nav() {
   const pathname = usePathname()
   const { count, openCart } = useCart()
   const [scrolled, setScrolled] = useState(false)
+  const [signedIn, setSignedIn] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+    let active = true
+    supabase.auth.getUser().then(({ data }) => {
+      if (active) setSignedIn(!!data.user)
+    })
+    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
+      setSignedIn(!!session?.user),
+    )
+    return () => {
+      active = false
+      data.subscription.unsubscribe()
+    }
   }, [])
 
   const isLight = lightRoutes.includes(pathname)
@@ -57,7 +75,38 @@ export default function Nav() {
         Monster Depot
       </Link>
 
-      <button
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <Link
+          href={signedIn ? '/account' : '/login'}
+          aria-label={signedIn ? 'Your account' : 'Sign in'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '40px',
+            minHeight: '40px',
+            color: textColor,
+            transition: 'color var(--dur-base) var(--ease-out)',
+          }}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill={signedIn ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+          </svg>
+        </Link>
+
+        <button
         type="button"
         onClick={openCart}
         aria-label="Open cart"
@@ -121,6 +170,7 @@ export default function Nav() {
           {count}
         </span>
       </button>
+      </div>
     </header>
   )
 }

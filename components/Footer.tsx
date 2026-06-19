@@ -88,6 +88,24 @@ export default function Footer() {
             )}
           </span>
         ))}
+        <span aria-hidden="true" style={{ color: 'var(--text-tertiary)' }}>·</span>
+        <Link
+          href="/recipes"
+          className="footer-link"
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 400,
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            transition: 'color var(--dur-fast) var(--ease-out)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: '44px',
+          }}
+        >
+          Recipes
+        </Link>
       </nav>
 
       {/* Row 3: policy links */}
