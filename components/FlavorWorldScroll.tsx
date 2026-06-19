@@ -10,31 +10,51 @@ export default function FlavorWorldScroll() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [activeBg, setActiveBg] = useState(flavors[0]?.bg ?? 'var(--surface-off)')
 
+  // Tracks the committed flavor so both updaters below no-op when unchanged.
+  const activeRef = useRef(0)
+
   useEffect(() => {
     const root = scrollRef.current
     if (!root) return
-    if (typeof IntersectionObserver === 'undefined') return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            const idx = cardRefs.current.findIndex((node) => node === entry.target)
-            if (idx >= 0) {
-              setActiveIndex(idx)
-              setActiveBg(flavors[idx].bg)
+    const setActive = (idx: number) => {
+      if (idx < 0 || idx >= flavors.length || activeRef.current === idx) return
+      activeRef.current = idx
+      setActiveIndex(idx)
+      setActiveBg(flavors[idx].bg)
+    }
+
+    // Primary: IntersectionObserver — updates as a card crosses 50% visibility.
+    let observer: IntersectionObserver | null = null
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+              setActive(cardRefs.current.findIndex((node) => node === entry.target))
             }
-          }
-        })
-      },
-      { root, threshold: 0.5 },
-    )
+          })
+        },
+        { root, threshold: 0.5 },
+      )
+      cardRefs.current.forEach((node) => {
+        if (node) observer!.observe(node)
+      })
+    }
 
-    cardRefs.current.forEach((node) => {
-      if (node) observer.observe(node)
-    })
+    // Backup: derive the active flavor from scroll position, for any device or
+    // context where IntersectionObserver doesn't fire reliably. The ref guard
+    // keeps it cheap — state only commits at snap boundaries.
+    const onScroll = () => {
+      const w = root.clientWidth
+      if (w > 0) setActive(Math.round(root.scrollLeft / w))
+    }
+    root.addEventListener('scroll', onScroll, { passive: true })
 
-    return () => observer.disconnect()
+    return () => {
+      if (observer) observer.disconnect()
+      root.removeEventListener('scroll', onScroll)
+    }
   }, [])
 
   const goTo = (index: number) => {
