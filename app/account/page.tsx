@@ -170,7 +170,7 @@ export default function AccountPage() {
     borderBottom: '1px solid #E5E5E5',
     borderRadius: 0,
     padding: '10px 0',
-    fontSize: '15px',
+    fontSize: '16px', // >=16px so iOS Safari doesn't zoom on focus
     fontFamily: 'inherit',
     background: 'transparent',
     color: 'var(--text-primary)',

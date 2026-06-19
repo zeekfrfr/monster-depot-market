@@ -54,7 +54,7 @@ export default function PaymentSheet({ total, count, onBack, onSuccess }: Paymen
         const card = await payments.card({
           style: {
             input: {
-              fontSize: '15px',
+              fontSize: '16px',
               fontFamily: "'DM Sans', sans-serif",
               color: '#1A1A1A',
               backgroundColor: 'transparent',
@@ -158,7 +158,7 @@ export default function PaymentSheet({ total, count, onBack, onSuccess }: Paymen
     }`,
     borderRadius: 0,
     padding: '12px 0',
-    fontSize: '15px',
+    fontSize: '16px', // >=16px so iOS Safari doesn't zoom the page on focus
     fontFamily: 'var(--font-dm-sans)',
     background: 'transparent',
     color: 'var(--text-primary)',

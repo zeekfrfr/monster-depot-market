@@ -48,7 +48,7 @@ export default function LoginPage() {
     borderBottom: `1px solid ${focused === field ? 'var(--brand-purple-dark)' : '#E5E5E5'}`,
     borderRadius: 0,
     padding: '12px 0',
-    fontSize: '15px',
+    fontSize: '16px', // >=16px so iOS Safari doesn't zoom on focus
     fontFamily: 'inherit',
     background: 'transparent',
     color: 'var(--text-primary)',
