@@ -29,6 +29,7 @@ export interface Recipe {
   tags: string[]
   cover_image_url: string | null
   is_published: boolean
+  base_servings?: number
 }
 
 // ---- Display maps ----
@@ -54,20 +55,18 @@ export const METHOD_COOK_LABEL: Record<string, string> = {
 
 // Filter-pill label (plural) — used on the /recipes index.
 export const CATEGORY_LABEL: Record<string, string> = {
-  'dessert-pouch': 'Dessert Pouches',
+  'dessert-pouch': 'Munchie Pouches',
   'munchie-meal': 'Munchie Meals',
   'munchie-snack': 'Munchie Snacks',
-  savory: 'Savory',
-  drink: 'Drinks',
+  'munchie-sweet': 'Munchie Sweets',
 }
 
 // Card label (singular) — used on the small category pill on each recipe card.
 export const CATEGORY_CARD_LABEL: Record<string, string> = {
-  'dessert-pouch': 'Dessert Pouch',
+  'dessert-pouch': 'Munchie Pouch',
   'munchie-meal': 'Munchie Meal',
   'munchie-snack': 'Munchie Snack',
-  savory: 'Savory',
-  drink: 'Drink',
+  'munchie-sweet': 'Munchie Sweet',
 }
 
 export function cookLabel(r: Pick<Recipe, 'method' | 'cook_time_minutes'>): string {
@@ -83,6 +82,42 @@ export function recipeColors(r: Pick<Recipe, 'flavor_slug'>): { bg: string; text
     text: f?.text ?? '#FFFFFF',
     accent: f?.accent ?? 'var(--brand-purple-light)',
   }
+}
+
+// ---- Serving scaler ----
+const FRACTIONS: Array<[number, string]> = [
+  [1 / 8, '⅛'], [1 / 6, '⅙'], [1 / 4, '¼'], [1 / 3, '⅓'], [3 / 8, '⅜'],
+  [1 / 2, '½'], [5 / 8, '⅝'], [2 / 3, '⅔'], [3 / 4, '¾'], [7 / 8, '⅞'],
+]
+
+function prettyAmount(v: number): string {
+  // Over 1 → round to 1 decimal; at/under 1 → nearest tidy fraction, else 2dp.
+  if (v > 1) {
+    const r = Math.round(v * 10) / 10
+    return String(r)
+  }
+  for (const [val, glyph] of FRACTIONS) {
+    if (Math.abs(v - val) < 0.04) return glyph
+  }
+  if (Math.abs(v - 1) < 0.04) return '1'
+  return String(Math.round(v * 100) / 100)
+}
+
+/**
+ * Scales an ingredient amount string by a multiplier, with smart fractions.
+ * Handles ranges ("3-4" → both ends scaled), single numbers, and passes through
+ * null / non-numeric amounts ("small dash") unchanged. multiplier 1 = as-written.
+ */
+export function scaleAmount(amount: string | null, multiplier: number): string | null {
+  if (!amount) return amount
+  if (multiplier === 1) return amount
+  return amount
+    .split('-')
+    .map((p) => {
+      const n = parseFloat(p)
+      return Number.isNaN(n) ? p.trim() : prettyAmount(n * multiplier)
+    })
+    .join('–')
 }
 
 // ---- Server-side data access (public, anon-readable via RLS) ----

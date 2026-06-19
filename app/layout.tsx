@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://monsterdepotmarket.com'),
   title: 'Monster Depot Market — Got Munchies?',
   description:
-    'Exotic single-serving dessert pouches. Add water, make a dessert in a mug, air fryer, or waffle maker in under 5 minutes. Five flavors. 18+.',
+    'Exotic single-serving Munchie Pouches. Just add liquid and make a dessert in a mug, air fryer, or waffle maker in under 5 minutes. Five flavors. 18+.',
   icons: { icon: '/favicon.ico' },
 }
 

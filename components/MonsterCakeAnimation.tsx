@@ -134,7 +134,7 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
             zIndex: 1,
           }}
         >
-          Add water. Watch it change.
+          Add your liquid. Watch it change.
         </p>
       )}
 

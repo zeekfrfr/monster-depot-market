@@ -37,6 +37,19 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
     <>
       <h2 style={nameStyle}>{flavor.name}</h2>
       <p style={hookStyle}>{flavor.hook}</p>
+      <p
+        style={{
+          fontFamily: 'var(--font-dm-sans)',
+          fontWeight: 300,
+          fontSize: '14px',
+          color: flavor.text,
+          opacity: 0.5,
+          marginTop: '6px',
+          marginBottom: 0,
+        }}
+      >
+        Just add liquid.
+      </p>
     </>
   )
 

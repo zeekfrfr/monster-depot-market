@@ -9,7 +9,7 @@ export default function RefundPolicy() {
       <p style={meta}>Last updated: June 2026</p>
 
       <p style={body}>
-        Monster Depot Holdings LLC sells single-serving consumable dessert pouches.
+        Monster Depot Holdings LLC sells single-serving consumable Munchie Pouches.
         Because every pouch is a food item made for eating, our refund policy is built
         around food safety. Please read it carefully before you order.
       </p>

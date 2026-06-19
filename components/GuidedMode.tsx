@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import type { Recipe } from '@/lib/recipes'
+import StepTip from './StepTip'
 
 interface GuidedModeProps {
   recipe: Recipe
@@ -9,6 +10,7 @@ interface GuidedModeProps {
   bg: string
   textColor: string
   accentTextColor: string
+  servingsLabel?: string
   onExit: (reason: 'exit' | 'done') => void
 }
 
@@ -18,6 +20,7 @@ export default function GuidedMode({
   bg,
   textColor,
   accentTextColor,
+  servingsLabel,
   onExit,
 }: GuidedModeProps) {
   const steps =
@@ -183,6 +186,23 @@ export default function GuidedMode({
         </button>
       </div>
 
+      {servingsLabel && (
+        <p
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 400,
+            fontSize: '12px',
+            color: muted(45),
+            textAlign: 'center',
+            marginTop: 'var(--space-3)',
+            marginBottom: 0,
+            flexShrink: 0,
+          }}
+        >
+          Making: {servingsLabel}
+        </p>
+      )}
+
       {/* Step number label */}
       <p
         style={{
@@ -193,7 +213,7 @@ export default function GuidedMode({
           letterSpacing: '0.1em',
           color: muted(50),
           textAlign: 'center',
-          marginTop: 'var(--space-4)',
+          marginTop: 'var(--space-3)',
           marginBottom: 0,
           flexShrink: 0,
         }}
@@ -228,22 +248,7 @@ export default function GuidedMode({
           >
             {step.instruction}
           </p>
-          {step.tip && (
-            <p
-              style={{
-                fontFamily: 'var(--font-dm-sans)',
-                fontWeight: 300,
-                fontStyle: 'italic',
-                fontSize: '15px',
-                color: muted(60),
-                marginTop: '24px',
-                marginBottom: 0,
-                lineHeight: 1.5,
-              }}
-            >
-              Tip: {step.tip}
-            </p>
-          )}
+          {step.tip && <StepTip tip={step.tip} variant="guided" />}
         </div>
       </div>
 

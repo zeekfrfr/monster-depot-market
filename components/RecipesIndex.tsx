@@ -5,7 +5,7 @@ import { type Recipe, CATEGORY_LABEL } from '@/lib/recipes'
 import RecipeCard from './RecipeCard'
 
 // Canonical pill order; only categories that actually have recipes render.
-const CATEGORY_ORDER = ['dessert-pouch', 'munchie-meal', 'munchie-snack', 'savory', 'drink']
+const CATEGORY_ORDER = ['dessert-pouch', 'munchie-meal', 'munchie-snack', 'munchie-sweet']
 
 function Pill({
   label,

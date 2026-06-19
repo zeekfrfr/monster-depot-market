@@ -83,6 +83,21 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
       >
         {flavor.hook}
       </p>
+      <p
+        className="anim-fade-up-sm"
+        style={{
+          fontFamily: 'var(--font-dm-sans)',
+          fontWeight: 300,
+          fontSize: '15px',
+          color: flavor.text,
+          opacity: 0.5,
+          marginTop: '8px',
+          marginBottom: '16px',
+          animationDelay: '90ms',
+        }}
+      >
+        Just add liquid.
+      </p>
     </>
   )
 

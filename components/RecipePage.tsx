@@ -7,10 +7,12 @@ import {
   type Recipe,
   recipeColors,
   cookLabel,
+  scaleAmount,
   METHOD_SHORT,
 } from '@/lib/recipes'
 import SaveButton from './SaveButton'
 import GuidedMode from './GuidedMode'
+import StepTip from './StepTip'
 
 interface RecipePageProps {
   recipe: Recipe
@@ -34,6 +36,24 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
     const id = window.setTimeout(() => setGuided(true), 500)
     return () => window.clearTimeout(id)
   }, [])
+
+  // Serving scaler — written amounts are the full batch (base_servings); buttons
+  // scale every amount by selected/base.
+  const baseServings = recipe.base_servings && recipe.base_servings > 0 ? recipe.base_servings : 1
+  const [servings, setServings] = useState(baseServings)
+  const multiplier = servings / baseServings
+  const presets: { label: string; value: number }[] = [
+    { label: '1', value: 1 },
+    { label: '2', value: 2 },
+    { label: '4', value: 4 },
+  ]
+  if (![1, 2, 4].includes(baseServings)) {
+    presets.push({ label: `Full batch (${baseServings})`, value: baseServings })
+  }
+  const servingsLabel =
+    ![1, 2, 4].includes(baseServings) && servings === baseServings
+      ? `full batch (${baseServings})`
+      : `${servings} serving${servings === 1 ? '' : 's'}`
 
   const pillStyle: React.CSSProperties = {
     fontFamily: 'var(--font-dm-sans)',
@@ -77,6 +97,23 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
         >
           {recipe.description}
         </p>
+      )}
+      {recipe.flavor_slug && (
+        <span
+          style={{
+            display: 'inline-block',
+            marginTop: 'var(--space-3)',
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 400,
+            fontSize: '13px',
+            padding: '5px 12px',
+            borderRadius: 'var(--radius-full)',
+            background: `color-mix(in srgb, ${accent} 16%, transparent)`,
+            color: `color-mix(in srgb, ${accent} 80%, transparent)`,
+          }}
+        >
+          Munchie Pouch · Just add liquid.
+        </span>
       )}
     </>
   )
@@ -175,6 +212,40 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
           padding: '56px var(--space-6) 64px',
         }}
       >
+        {/* Serving size scaler */}
+        <div style={{ maxWidth: '900px', margin: '0 auto 32px' }}>
+          <p style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 400, fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 10px' }}>
+            How many?
+          </p>
+          <div role="group" aria-label="Serving size" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {presets.map((p) => {
+              const active = servings === p.value
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setServings(p.value)}
+                  aria-pressed={active}
+                  style={{
+                    flex: '1 1 auto',
+                    minHeight: '44px',
+                    padding: '10px 16px',
+                    borderRadius: 'var(--radius-full)',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    whiteSpace: 'nowrap',
+                    ...(active
+                      ? { background: 'var(--brand-purple-light)', color: '#fff', border: '1px solid var(--brand-purple-light)', fontFamily: 'var(--font-syne)', fontWeight: 700 }
+                      : { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--text-disabled)', fontFamily: 'var(--font-dm-sans)', fontWeight: 400 }),
+                  }}
+                >
+                  {p.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="recipe-cols" style={{ maxWidth: '900px', margin: '0 auto' }}>
           {/* Ingredients */}
           <div>
@@ -222,6 +293,8 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
                   }}
                 >
                   <span
+                    key={`${servings}-${idx}`}
+                    className="recipe-amt"
                     style={{
                       fontFamily: 'var(--font-dm-sans)',
                       fontWeight: 500,
@@ -230,8 +303,8 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {ing.amount}
-                    {ing.unit ? ` ${ing.unit}` : ''}
+                    {scaleAmount(ing.amount, multiplier)}
+                    {ing.amount && ing.unit ? ` ${ing.unit}` : ''}
                   </span>
                   <span
                     style={{
@@ -299,21 +372,7 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
                     >
                       {s.instruction}
                     </p>
-                    {s.tip && (
-                      <p
-                        style={{
-                          fontFamily: 'var(--font-dm-sans)',
-                          fontWeight: 300,
-                          fontStyle: 'italic',
-                          fontSize: '14px',
-                          color: 'var(--text-secondary)',
-                          margin: '6px 0 0',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {s.tip}
-                      </p>
-                    )}
+                    {s.tip && <StepTip tip={s.tip} />}
                   </div>
                 </div>
               ))}
@@ -412,6 +471,7 @@ export default function RecipePage({ recipe, related }: RecipePageProps) {
           bg={bg}
           textColor={text}
           accentTextColor={accentTextColor}
+          servingsLabel={servingsLabel}
           onExit={(reason) => {
             setGuided(false)
             if (reason === 'done') setSuccess(true)

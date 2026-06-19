@@ -312,6 +312,49 @@ a[href],
 .gm-next { transition: transform var(--dur-fast) var(--ease-spring), filter var(--dur-fast) ease; }
 .gm-next:hover { transform: scale(1.02); filter: brightness(1.1); }
 
+/* Ingredient amount fades briefly when the serving size changes */
+@keyframes recipeAmtFade { from { opacity: 0.35; } to { opacity: 1; } }
+.recipe-amt { animation: recipeAmtFade 150ms ease; }
+
+/* Step tips — desktop floating hover card (standard view) */
+.step-tip-hovercard {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: 280px;
+  background: var(--surface-white);
+  border: 1px solid #E5E5E5;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: var(--font-dm-sans);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 150ms ease, transform 150ms ease, visibility 150ms;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .step-tip:hover .step-tip-hovercard,
+  .step-tip-toggle:focus-visible ~ .step-tip-hovercard {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+@media (hover: none) {
+  .step-tip-hovercard { display: none; }
+}
+/* Guided-mode pro-tip card slides up on open */
+@keyframes stepTipUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.step-tip-card { animation: stepTipUp 200ms ease both; }
+
 /* Respect reduced-motion: collapse every animation/transition */
 @media (prefers-reduced-motion: reduce) {
   *,
