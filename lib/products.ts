@@ -196,11 +196,9 @@ export function getFlavor(slug: string): Flavor | undefined {
   return flavors.find((f) => f.slug === slug)
 }
 
-// These three worlds set their text token to #000000 over a dark background,
-// which fails WCAG AA on its own. We honor the brand colors and lift legibility
-// with a soft light scrim behind headline + hook (see .text-scrim in globals.css).
-const SCRIM_SLUGS = new Set(["monster-cake", "vanilla-honey-crumble", "apple-fritter"])
-
-export function needsTextScrim(slug: string): boolean {
-  return SCRIM_SLUGS.has(slug)
+// monster-cake / vanilla-honey-crumble / apple-fritter now use white text
+// (--*-text = #FFFFFF), which reads cleanly on their dark backgrounds — so the
+// light scrim is no longer needed anywhere.
+export function needsTextScrim(_slug: string): boolean {
+  return false
 }

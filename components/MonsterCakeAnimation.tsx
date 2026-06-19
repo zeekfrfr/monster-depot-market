@@ -127,7 +127,7 @@ export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationPr
             fontFamily: 'var(--font-dm-sans)',
             fontWeight: 300,
             fontSize: '13px',
-            color: 'rgba(0,0,0,0.6)',
+            color: 'rgba(255,255,255,0.75)',
             textAlign: 'center',
             marginTop: '16px',
             position: 'relative',
