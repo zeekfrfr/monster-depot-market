@@ -195,7 +195,7 @@ export default function ThreeWays({ flavor }: ThreeWaysProps) {
                     padding: '10px 18px',
                     borderRadius: 'var(--radius-full)',
                     background: flavor.accent,
-                    color: flavor.slug === 'monster-cake' ? '#fff' : '#1A1A1A',
+                    color: flavor.slug === 'monster-cookie' ? '#fff' : '#1A1A1A',
                     fontFamily: 'var(--font-syne)',
                     fontWeight: 700,
                     fontSize: '14px',

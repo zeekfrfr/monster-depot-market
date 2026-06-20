@@ -1,6 +1,6 @@
 type Variant = 'home' | 'flavor'
 
-interface MonsterCakeAnimationProps {
+interface MonsterCookieAnimationProps {
   variant: Variant
 }
 
@@ -12,7 +12,7 @@ interface MonsterCakeAnimationProps {
  * SMIL or CSS stop-color transitions. A glow behind the mug crossfades
  * cobalt -> purple and pulses on a loop. Pure CSS; respects prefers-reduced-motion.
  */
-export default function MonsterCakeAnimation({ variant }: MonsterCakeAnimationProps) {
+export default function MonsterCookieAnimation({ variant }: MonsterCookieAnimationProps) {
   const isFlavor = variant === 'flavor'
   const mugSize = isFlavor ? 'min(60vw, 360px)' : 'min(40vw, 240px)'
   const bloomMs = isFlavor ? 2500 : 2000

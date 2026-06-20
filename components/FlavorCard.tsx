@@ -116,7 +116,7 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
             label="Add to cart"
             style={{
               background: flavor.accent,
-              color: flavor.slug === 'monster-cake' ? '#fff' : '#1A1A1A',
+              color: flavor.slug === 'monster-cookie' ? '#fff' : '#1A1A1A',
               fontSize: '15px',
             }}
           />

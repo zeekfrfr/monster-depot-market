@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import MonsterCakeAnimation from '@/components/MonsterCakeAnimation'
+import MonsterCookieAnimation from '@/components/MonsterCookieAnimation'
 import FlavorWorldScroll from '@/components/FlavorWorldScroll'
 import SubscriptionHook from '@/components/SubscriptionHook'
 import ContentFeedPlaceholder from '@/components/ContentFeedPlaceholder'
@@ -40,7 +40,7 @@ export default function HomePage() {
           padding: 'var(--space-6)',
         }}
       >
-        <MonsterCakeAnimation variant="home" />
+        <MonsterCookieAnimation variant="home" />
 
         <h1
           className="anim-fade-up"

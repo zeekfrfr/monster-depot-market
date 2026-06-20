@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Flavor } from '@/lib/products'
 import { needsTextScrim } from '@/lib/products'
-import MonsterCakeAnimation from './MonsterCakeAnimation'
+import BeforeAfterSlider from './BeforeAfterSlider'
 import VideoPlaceholder from './VideoPlaceholder'
 import ThreeWays from './ThreeWays'
 import ToppingsMenu from './ToppingsMenu'
@@ -21,7 +21,7 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
   const [watchHover, setWatchHover] = useState(false)
 
   const scrim = needsTextScrim(flavor.slug)
-  const isMonster = flavor.slug === 'monster-cake'
+  const isMonster = flavor.slug === 'monster-cookie'
 
   // Remove the entrance overlay once its bgExpand run completes (300ms).
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
           />
           <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'center' }}>
             {isMonster ? (
-              <MonsterCakeAnimation variant="flavor" />
+              <BeforeAfterSlider />
             ) : (
               <VideoPlaceholder
                 ratio="9:16"

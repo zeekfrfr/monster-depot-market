@@ -37,59 +37,6 @@ export type Flavor = {
 
 export const flavors: Flavor[] = [
   {
-    slug: "blueberry-cake-donut",
-    name: "Blueberry Cake Donut",
-    hook: "You already know.",
-    price: 8.99,
-    sevenPackPrice: 29.99,
-    mixMatchPrice: 31.99,
-    bg: "var(--blueberry-bg)",
-    text: "var(--blueberry-text)",
-    accent: "var(--blueberry-accent)",
-    mylarColor: "Deep purple",
-    includedTopping: "Freeze dried blueberries",
-    toppings: {
-      drizzle:      { name: "Vanilla cream drizzle", price: 0.99 },
-      crunch:       { name: "Almond crumble", price: 0.99 },
-      elevate:      { name: "Blueberry jam reserve", price: 1.29 },
-      extraIncluded: [
-        { name: "Extra freeze dried blueberries", price: 0.99 }
-      ]
-    },
-    cookingMethods: [
-      { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
-      { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
-      { method: "Waffle Maker",         time: "3–5 min",  result: "Flat, golden, crispy" }
-    ],
-    videoPlaceholder: true
-  },
-  {
-    slug: "monster-cake",
-    name: "Monster Cake",
-    hook: "Watch what happens.",
-    price: 8.99,
-    sevenPackPrice: 29.99,
-    mixMatchPrice: 31.99,
-    bg: "var(--monster-bg)",
-    text: "var(--monster-text)",
-    accent: "var(--monster-accent)",
-    mylarColor: "Cobalt blue",
-    includedTopping: null,
-    isSignature: true,
-    toppings: {
-      drizzle:      { name: "Honey drizzle", price: 0.89 },
-      crunch:       { name: "Vanilla crumble", price: 0.79 },
-      elevate:      { name: "Freeze dried blueberries", price: 0.99 },
-      extraIncluded: []
-    },
-    cookingMethods: [
-      { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
-      { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
-      { method: "Waffle Maker",         time: "3–5 min",  result: "Flat, golden, crispy" }
-    ],
-    videoPlaceholder: true
-  },
-  {
     slug: "vanilla-honey-crumble",
     name: "Vanilla Honey Crumble",
     hook: "Simple. But not.",
@@ -170,6 +117,59 @@ export const flavors: Flavor[] = [
       { method: "Waffle Maker",         time: "3–5 min",  result: "Flat, golden, crispy" }
     ],
     videoPlaceholder: true
+  },
+  {
+    slug: "blueberry-cake-donut",
+    name: "Blueberry Cake Donut",
+    hook: "You already know.",
+    price: 8.99,
+    sevenPackPrice: 29.99,
+    mixMatchPrice: 31.99,
+    bg: "var(--blueberry-bg)",
+    text: "var(--blueberry-text)",
+    accent: "var(--blueberry-accent)",
+    mylarColor: "Deep purple",
+    includedTopping: "Freeze dried blueberries",
+    toppings: {
+      drizzle:      { name: "Vanilla cream drizzle", price: 0.99 },
+      crunch:       { name: "Almond crumble", price: 0.99 },
+      elevate:      { name: "Blueberry jam reserve", price: 1.29 },
+      extraIncluded: [
+        { name: "Extra freeze dried blueberries", price: 0.99 }
+      ]
+    },
+    cookingMethods: [
+      { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
+      { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
+      { method: "Waffle Maker",         time: "3–5 min",  result: "Flat, golden, crispy" }
+    ],
+    videoPlaceholder: true
+  },
+  {
+    slug: "monster-cookie",
+    name: "Monster Cookie",
+    hook: "Watch what happens.",
+    price: 8.99,
+    sevenPackPrice: 29.99,
+    mixMatchPrice: 31.99,
+    bg: "var(--monster-bg)",
+    text: "var(--monster-text)",
+    accent: "var(--monster-accent)",
+    mylarColor: "Cobalt blue",
+    includedTopping: null,
+    isSignature: true,
+    toppings: {
+      drizzle:      { name: "Honey drizzle", price: 0.89 },
+      crunch:       { name: "Vanilla crumble", price: 0.79 },
+      elevate:      { name: "Freeze dried blueberries", price: 0.99 },
+      extraIncluded: []
+    },
+    cookingMethods: [
+      { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
+      { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
+      { method: "Waffle Maker",         time: "3–5 min",  result: "Flat, golden, crispy" }
+    ],
+    videoPlaceholder: true
   }
 ]
 
@@ -196,7 +196,7 @@ export function getFlavor(slug: string): Flavor | undefined {
   return flavors.find((f) => f.slug === slug)
 }
 
-// monster-cake / vanilla-honey-crumble / apple-fritter now use white text
+// monster-cookie / vanilla-honey-crumble / apple-fritter now use white text
 // (--*-text = #FFFFFF), which reads cleanly on their dark backgrounds — so the
 // light scrim is no longer needed anywhere.
 export function needsTextScrim(_slug: string): boolean {

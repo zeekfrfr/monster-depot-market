@@ -21,7 +21,7 @@ interface RecipePageProps {
 
 export default function RecipePage({ recipe, related }: RecipePageProps) {
   const { bg, text, accent } = recipeColors(recipe)
-  const isMonster = recipe.flavor_slug === 'monster-cake'
+  const isMonster = recipe.flavor_slug === 'monster-cookie'
   const accentTextColor = recipe.flavor_slug && !isMonster ? '#1A1A1A' : '#fff'
   const scrim = recipe.flavor_slug ? needsTextScrim(recipe.flavor_slug) : false
   const includedTopping = recipe.flavor_slug ? getFlavor(recipe.flavor_slug)?.includedTopping : null

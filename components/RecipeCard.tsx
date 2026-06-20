@@ -23,7 +23,7 @@ export default function RecipeCard({ recipe, variant = 'index', onRemoved }: Rec
   const { toggle } = useSavedRecipes()
   const account = variant === 'account'
   const coverHeight = account ? 140 : 200
-  const isMonster = recipe.flavor_slug === 'monster-cake'
+  const isMonster = recipe.flavor_slug === 'monster-cookie'
   const accentTextColor = isMonster ? '#fff' : '#1A1A1A'
   const methodPill = recipe.method
     ? `${METHOD_SHORT[recipe.method] ?? recipe.method} · ${cookLabel(recipe)}`

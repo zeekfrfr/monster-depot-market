@@ -355,6 +355,9 @@ a[href],
 @keyframes stepTipUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .step-tip-card { animation: stepTipUp 200ms ease both; }
 
+/* Before/after slider handle */
+.ba-handle:hover { transform: scale(1.06); }
+
 /* Respect reduced-motion: collapse every animation/transition */
 @media (prefers-reduced-motion: reduce) {
   *,
