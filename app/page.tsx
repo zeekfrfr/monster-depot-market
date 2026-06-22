@@ -5,7 +5,7 @@ import MonsterCookieAnimation from '@/components/MonsterCookieAnimation'
 import FlavorWorldScroll from '@/components/FlavorWorldScroll'
 import SubscriptionHook from '@/components/SubscriptionHook'
 import ContentFeedPlaceholder from '@/components/ContentFeedPlaceholder'
-import { allToppings } from '@/lib/products'
+import { TOPPINGS } from '@/lib/products'
 
 export default function HomePage() {
   const [addedIndex, setAddedIndex] = useState<number | null>(null)
@@ -210,7 +210,7 @@ function ToppingsGrid({
       `}</style>
 
       <div className="mdm-addons-grid">
-        {allToppings.map((topping, index) => {
+        {TOPPINGS.map((topping, index) => {
           const added = addedIndex === index
           return (
             <div
@@ -227,18 +227,6 @@ function ToppingsGrid({
                 gap: '4px',
               }}
             >
-              <span
-                style={{
-                  fontFamily: 'var(--font-dm-sans)',
-                  fontSize: '11px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: 'var(--text-tertiary)',
-                }}
-              >
-                {topping.category}
-              </span>
-
               <span
                 style={{
                   fontFamily: 'var(--font-dm-sans)',

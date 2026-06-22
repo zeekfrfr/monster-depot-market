@@ -10,13 +10,6 @@ export type Topping = {
   category?: string
 }
 
-export type FlavorToppings = {
-  drizzle: Topping
-  crunch: Topping
-  elevate: Topping
-  extraIncluded: Topping[]
-}
-
 export type Flavor = {
   slug: string
   name: string
@@ -29,7 +22,8 @@ export type Flavor = {
   accent: string
   mylarColor: string
   includedTopping: string | null
-  toppings: FlavorToppings
+  // Names referencing TOPPINGS below — shown first in the "Make it yours" menu.
+  recommendedToppings: string[]
   cookingMethods: CookingMethod[]
   isSignature?: boolean
   videoPlaceholder: boolean
@@ -71,12 +65,7 @@ export const flavors: Flavor[] = [
     accent: "#C8860A",
     mylarColor: "Deep cocoa",
     includedTopping: "Peanut butter packet + honey stick",
-    toppings: {
-      drizzle:      { name: "Honey drizzle", price: 0.89 },
-      crunch:       { name: "Almond crumble", price: 0.99 },
-      elevate:      { name: "Freeze dried strawberries", price: 0.99 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Protein Peanut Butter Drizzle", "Honey Drizzle", "Chocolate Chips"],
     cookingMethods: STANDARD_METHODS,
     videoPlaceholder: true,
     ingredients: {
@@ -100,12 +89,7 @@ export const flavors: Flavor[] = [
     accent: "#D4A056",
     mylarColor: "Spiced amber",
     includedTopping: "Stroopwafel crumble packet",
-    toppings: {
-      drizzle:      { name: "Caramel drizzle", price: 0.89 },
-      crunch:       { name: "Pecan crumble", price: 0.99 },
-      elevate:      { name: "Cinnamon sugar packet", price: 0.79 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Honey Drizzle", "Stroopwafel Crumble"],
     cookingMethods: STANDARD_METHODS,
     videoPlaceholder: true,
     ingredients: {
@@ -129,12 +113,7 @@ export const flavors: Flavor[] = [
     accent: "#FF4500",
     mylarColor: "Molten red",
     includedTopping: "Dark chocolate chip packet",
-    toppings: {
-      drizzle:      { name: "Vanilla cream drizzle", price: 0.99 },
-      crunch:       { name: "Almond crumble", price: 0.99 },
-      elevate:      { name: "Freeze dried strawberries", price: 0.99 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Chocolate Chips", "Vanilla Glaze"],
     cookingMethods: STANDARD_METHODS,
     videoPlaceholder: true,
     ingredients: {
@@ -158,12 +137,7 @@ export const flavors: Flavor[] = [
     accent: "#FF6B8A",
     mylarColor: "Berry pink",
     includedTopping: "Strawberry jam + glaze packet",
-    toppings: {
-      drizzle:      { name: "Strawberry jam reserve", price: 1.29 },
-      crunch:       { name: "Vanilla crumble", price: 0.79 },
-      elevate:      { name: "Freeze dried strawberries", price: 0.99 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Vanilla Glaze", "Strawberry Jam Reserve"],
     cookingMethods: STANDARD_METHODS,
     videoPlaceholder: true,
     ingredients: {
@@ -187,12 +161,7 @@ export const flavors: Flavor[] = [
     accent: "#E8A020",
     mylarColor: "Honey gold",
     includedTopping: "Honey stick + crumble packet",
-    toppings: {
-      drizzle:      { name: "Honey drizzle", price: 0.89 },
-      crunch:       { name: "Pecan crumble", price: 0.99 },
-      elevate:      { name: "Cinnamon sugar packet", price: 0.79 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Honey Drizzle", "Stroopwafel Crumble"],
     cookingMethods: STANDARD_METHODS,
     videoPlaceholder: true,
     ingredients: {
@@ -216,15 +185,7 @@ export const flavors: Flavor[] = [
     accent: "var(--vanilla-accent)",
     mylarColor: "Warm gold",
     includedTopping: "Honey packet + crumble packet",
-    toppings: {
-      drizzle:      { name: "Caramel drizzle", price: 0.89 },
-      crunch:       { name: "Pecan crumble", price: 0.99 },
-      elevate:      { name: "Cinnamon sugar packet", price: 0.79 },
-      extraIncluded: [
-        { name: "Extra honey packet", price: 0.89 },
-        { name: "Extra crumble packet", price: 0.79 }
-      ]
-    },
+    recommendedToppings: ["Honey Drizzle", "Stroopwafel Crumble"],
     cookingMethods: [
       { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
       { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
@@ -245,14 +206,7 @@ export const flavors: Flavor[] = [
     accent: "var(--fritter-accent)",
     mylarColor: "Caramel brown",
     includedTopping: "Cinnamon sugar packet",
-    toppings: {
-      drizzle:      { name: "Caramel drizzle", price: 0.89 },
-      crunch:       { name: "Walnut crumble", price: 0.99 },
-      elevate:      { name: "Honey drizzle", price: 0.89 },
-      extraIncluded: [
-        { name: "Extra cinnamon sugar", price: 0.79 }
-      ]
-    },
+    recommendedToppings: ["Honey Drizzle", "Stroopwafel Crumble"],
     cookingMethods: [
       { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
       { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
@@ -273,14 +227,7 @@ export const flavors: Flavor[] = [
     accent: "var(--strawberry-accent)",
     mylarColor: "Strawberry red",
     includedTopping: "Freeze dried strawberries",
-    toppings: {
-      drizzle:      { name: "Strawberry jam reserve", price: 1.29 },
-      crunch:       { name: "Vanilla crumble", price: 0.79 },
-      elevate:      { name: "Freeze dried blueberries", price: 0.99 },
-      extraIncluded: [
-        { name: "Extra freeze dried strawberries", price: 0.99 }
-      ]
-    },
+    recommendedToppings: ["Strawberry Jam Reserve", "Vanilla Glaze"],
     cookingMethods: [
       { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
       { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
@@ -301,14 +248,7 @@ export const flavors: Flavor[] = [
     accent: "var(--blueberry-accent)",
     mylarColor: "Deep purple",
     includedTopping: "Freeze dried blueberries",
-    toppings: {
-      drizzle:      { name: "Vanilla cream drizzle", price: 0.99 },
-      crunch:       { name: "Almond crumble", price: 0.99 },
-      elevate:      { name: "Blueberry jam reserve", price: 1.29 },
-      extraIncluded: [
-        { name: "Extra freeze dried blueberries", price: 0.99 }
-      ]
-    },
+    recommendedToppings: ["Vanilla Glaze", "Chocolate Chips"],
     cookingMethods: [
       { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
       { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
@@ -330,12 +270,7 @@ export const flavors: Flavor[] = [
     mylarColor: "Cobalt blue",
     includedTopping: null,
     isSignature: true,
-    toppings: {
-      drizzle:      { name: "Honey drizzle", price: 0.89 },
-      crunch:       { name: "Vanilla crumble", price: 0.79 },
-      elevate:      { name: "Freeze dried blueberries", price: 0.99 },
-      extraIncluded: []
-    },
+    recommendedToppings: ["Honey Drizzle", "Chocolate Chips"],
     cookingMethods: [
       { method: "12oz Mug + Microwave", time: "90 sec",   result: "Soft, moist, classic" },
       { method: "Air Fryer",            time: "8–10 min", result: "Crispy edges, soft center" },
@@ -348,20 +283,23 @@ export const flavors: Flavor[] = [
 // Only the active launch lineup is shown publicly (homepage, footer, routes).
 export const activeFlavors = flavors.filter((f) => f.active)
 
-export const allToppings: Topping[] = [
-  { name: "Vanilla cream drizzle",    category: "Drizzle", price: 0.99 },
-  { name: "Caramel drizzle",          category: "Drizzle", price: 0.89 },
-  { name: "Honey drizzle",            category: "Drizzle", price: 0.89 },
-  { name: "Strawberry jam reserve",   category: "Drizzle", price: 1.29 },
-  { name: "Blueberry jam reserve",    category: "Drizzle", price: 1.29 },
-  { name: "Almond crumble",           category: "Crunch",  price: 0.99 },
-  { name: "Walnut crumble",           category: "Crunch",  price: 0.99 },
-  { name: "Pecan crumble",            category: "Crunch",  price: 0.99 },
-  { name: "Vanilla crumble",          category: "Crunch",  price: 0.79 },
-  { name: "Cinnamon sugar packet",    category: "Crunch",  price: 0.79 },
-  { name: "Freeze dried blueberries", category: "Elevate", price: 0.99 },
-  { name: "Freeze dried strawberries",category: "Elevate", price: 0.99 },
+// Flat add-on menu — no categories. Shown in the "Make it yours" popup, the
+// flavor-page toppings section, and the homepage add-ons grid.
+export const TOPPINGS: Topping[] = [
+  { name: "Honey Drizzle", price: 0.89 },
+  { name: "Vanilla Glaze", price: 0.79 },
+  { name: "Stroopwafel Crumble", price: 0.99 },
+  { name: "Chocolate Chips", price: 0.99 },
+  { name: "Protein Peanut Butter Drizzle", price: 2.49 },
+  { name: "Strawberry Jam Reserve", price: 1.29 },
 ]
+
+// Resolve a flavor's recommended topping names to full Topping objects.
+export function recommendedFor(flavor: Flavor): Topping[] {
+  return flavor.recommendedToppings
+    .map((name) => TOPPINGS.find((t) => t.name === name))
+    .filter((t): t is Topping => Boolean(t))
+}
 
 // Subscription product — modeled as a one-time charge for launch (no recurring
 // billing wired yet). Surfaced on /subscribe and added to cart as 'weekly-sub'.

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { Flavor, Topping } from '@/lib/products'
-import { allToppings } from '@/lib/products'
+import { TOPPINGS, recommendedFor } from '@/lib/products'
 import { useCart, type CartTopping } from '@/lib/cart'
 
 type ToppingsPopupProps = {
@@ -11,7 +11,6 @@ type ToppingsPopupProps = {
 }
 
 const DIVIDER = '1px solid #F3F4F6'
-const CARD_BORDER = '1px solid #E5E5E5'
 
 export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
   const { addItem } = useCart()
@@ -29,6 +28,10 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
   }
 
   const toppingsTotal = selected.reduce((s, t) => s + t.price, 0)
+
+  const recommended = recommendedFor(flavor)
+  const recommendedNames = new Set(recommended.map((t) => t.name))
+  const more = TOPPINGS.filter((t) => !recommendedNames.has(t.name))
 
   const buildItem = (toppings: CartTopping[]) => ({
     id: `${flavor.slug}-single-${Date.now()}`,
@@ -123,42 +126,10 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
           </p>
         </div>
 
-        {/* THESE HIT DIFFERENT WITH IT */}
-        <SectionLabel>These hit different with it:</SectionLabel>
-        <div
-          style={{
-            border: DIVIDER,
-            borderRadius: 'var(--radius-md)',
-            overflow: 'hidden',
-            marginBottom: 'var(--space-6)',
-          }}
-        >
-          <ToppingRow
-            category="Drizzle"
-            topping={flavor.toppings.drizzle}
-            added={isSelected(flavor.toppings.drizzle.name)}
-            onToggle={() => toggle(flavor.toppings.drizzle)}
-            divider
-          />
-          <ToppingRow
-            category="Crunch"
-            topping={flavor.toppings.crunch}
-            added={isSelected(flavor.toppings.crunch.name)}
-            onToggle={() => toggle(flavor.toppings.crunch)}
-            divider
-          />
-          <ToppingRow
-            category="Elevate"
-            topping={flavor.toppings.elevate}
-            added={isSelected(flavor.toppings.elevate.name)}
-            onToggle={() => toggle(flavor.toppings.elevate)}
-          />
-        </div>
-
-        {/* WANT MORE OF WHAT'S INSIDE */}
-        {flavor.toppings.extraIncluded.length > 0 && (
+        {/* Recommended for this flavor */}
+        {recommended.length > 0 && (
           <>
-            <SectionLabel>Want more of what&apos;s inside:</SectionLabel>
+            <SectionLabel>These hit different with {flavor.name}:</SectionLabel>
             <div
               style={{
                 border: DIVIDER,
@@ -167,39 +138,43 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
                 marginBottom: 'var(--space-6)',
               }}
             >
-              {flavor.toppings.extraIncluded.map((t, i) => (
+              {recommended.map((t, i) => (
                 <ToppingRow
                   key={t.name}
-                  category={t.category ?? 'Extra'}
                   topping={t}
                   added={isSelected(t.name)}
                   onToggle={() => toggle(t)}
-                  divider={i < flavor.toppings.extraIncluded.length - 1}
+                  divider={i < recommended.length - 1}
                 />
               ))}
             </div>
           </>
         )}
 
-        {/* OR ADD ANYTHING */}
-        <SectionLabel>Or add anything:</SectionLabel>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 'var(--space-3)',
-            marginBottom: 'var(--space-6)',
-          }}
-        >
-          {allToppings.map((t) => (
-            <ToppingCard
-              key={t.name}
-              topping={t}
-              added={isSelected(t.name)}
-              onToggle={() => toggle(t)}
-            />
-          ))}
-        </div>
+        {/* The rest of the menu */}
+        {more.length > 0 && (
+          <>
+            <SectionLabel>More toppings:</SectionLabel>
+            <div
+              style={{
+                border: DIVIDER,
+                borderRadius: 'var(--radius-md)',
+                overflow: 'hidden',
+                marginBottom: 'var(--space-6)',
+              }}
+            >
+              {more.map((t, i) => (
+                <ToppingRow
+                  key={t.name}
+                  topping={t}
+                  added={isSelected(t.name)}
+                  onToggle={() => toggle(t)}
+                  divider={i < more.length - 1}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Sticky bottom bar */}
         <div
@@ -266,13 +241,7 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-2)',
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <button
               type="button"
               onClick={handleAdd}
@@ -334,15 +303,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-type ToppingRowProps = {
-  category: string
+function ToppingRow({
+  topping,
+  added,
+  onToggle,
+  divider,
+}: {
   topping: Topping
   added: boolean
   onToggle: () => void
   divider?: boolean
-}
-
-function ToppingRow({ category, topping, added, onToggle, divider }: ToppingRowProps) {
+}) {
   return (
     <div
       style={{
@@ -354,120 +325,42 @@ function ToppingRow({ category, topping, added, onToggle, divider }: ToppingRowP
         borderBottom: divider ? DIVIDER : 'none',
       }}
     >
-      <div style={{ minWidth: 0 }}>
-        <div
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)', flexWrap: 'wrap', minWidth: 0 }}>
+        <span
           style={{
             fontFamily: 'var(--font-dm-sans)',
-            fontWeight: 400,
-            fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: 'var(--text-tertiary)',
+            fontWeight: 500,
+            fontSize: 15,
+            color: 'var(--text-primary)',
           }}
         >
-          {category}
-        </div>
-        <div
+          {topping.name}
+        </span>
+        <span
           style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: 'var(--space-2)',
-            marginTop: 2,
-            flexWrap: 'wrap',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 700,
+            fontSize: 14,
+            color: 'var(--brand-purple-light)',
           }}
         >
-          <span
-            style={{
-              fontFamily: 'var(--font-dm-sans)',
-              fontWeight: 500,
-              fontSize: 14,
-              color: 'var(--text-primary)',
-            }}
-          >
-            {topping.name}
-          </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 700,
-              fontSize: 14,
-              color: 'var(--brand-purple-light)',
-            }}
-          >
-            +${topping.price.toFixed(2)}
-          </span>
-        </div>
+          +${topping.price.toFixed(2)}
+        </span>
       </div>
       <ToggleButton added={added} onToggle={onToggle} label={topping.name} />
     </div>
   )
 }
 
-type ToppingCardProps = {
-  topping: Topping
-  added: boolean
-  onToggle: () => void
-}
-
-function ToppingCard({ topping, added, onToggle }: ToppingCardProps) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-2)',
-        background: 'var(--surface-white)',
-        border: CARD_BORDER,
-        borderRadius: 'var(--radius-md)',
-        padding: 16,
-      }}
-    >
-      <div
-        style={{
-          fontFamily: 'var(--font-dm-sans)',
-          fontWeight: 400,
-          fontSize: 11,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--text-tertiary)',
-        }}
-      >
-        {topping.category ?? 'Topping'}
-      </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-dm-sans)',
-          fontWeight: 500,
-          fontSize: 14,
-          color: 'var(--text-primary)',
-          lineHeight: 1.25,
-        }}
-      >
-        {topping.name}
-      </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-syne)',
-          fontWeight: 700,
-          fontSize: 14,
-          color: 'var(--brand-purple-light)',
-        }}
-      >
-        +${topping.price.toFixed(2)}
-      </div>
-      <ToggleButton added={added} onToggle={onToggle} label={topping.name} fullWidth />
-    </div>
-  )
-}
-
-type ToggleButtonProps = {
+function ToggleButton({
+  added,
+  onToggle,
+  label,
+}: {
   added: boolean
   onToggle: () => void
   label: string
-  fullWidth?: boolean
-}
-
-function ToggleButton({ added, onToggle, label, fullWidth }: ToggleButtonProps) {
+}) {
   return (
     <button
       type="button"
@@ -476,7 +369,6 @@ function ToggleButton({ added, onToggle, label, fullWidth }: ToggleButtonProps) 
       aria-label={added ? `Remove ${label}` : `Add ${label}`}
       style={{
         flexShrink: 0,
-        width: fullWidth ? '100%' : 'auto',
         minHeight: 44,
         padding: '0 var(--space-4)',
         background: added ? 'var(--brand-purple-light)' : 'transparent',

@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import type { Flavor, Topping } from '@/lib/products'
-import { allToppings } from '@/lib/products'
-
-type CuratedRow = { category: string; topping: Topping }
+import { TOPPINGS, recommendedFor } from '@/lib/products'
 
 function AddedButton({ added, onAdd }: { added: boolean; onAdd: () => void }) {
   return (
@@ -36,14 +34,12 @@ function AddedButton({ added, onAdd }: { added: boolean; onAdd: () => void }) {
   )
 }
 
-function CuratedToppingRow({
-  category,
+function ToppingRow({
   topping,
   added,
   onAdd,
   isLast,
 }: {
-  category: string
   topping: Topping
   added: boolean
   onAdd: () => void
@@ -59,119 +55,29 @@ function CuratedToppingRow({
         borderBottom: isLast ? 'none' : '1px solid #F3F4F6',
       }}
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontFamily: 'var(--font-dm-sans)',
-            fontWeight: 400,
-            fontSize: '11px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'var(--text-tertiary)',
-            marginBottom: 'var(--space-1)',
-          }}
-        >
-          {category}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <span
-            style={{
-              fontFamily: 'var(--font-dm-sans)',
-              fontWeight: 500,
-              fontSize: '15px',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {topping.name}
-          </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 700,
-              fontSize: '15px',
-              color: 'var(--brand-purple-light)',
-            }}
-          >
-            — +${topping.price.toFixed(2)}
-          </span>
-        </div>
-      </div>
-      <AddedButton added={added} onAdd={onAdd} />
-    </div>
-  )
-}
-
-function GridToppingCard({
-  topping,
-  added,
-  onAdd,
-}: {
-  topping: Topping
-  added: boolean
-  onAdd: () => void
-}) {
-  const [hover, setHover] = useState(false)
-  return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: 'var(--space-3)',
-        minHeight: '88px',
-        padding: 'var(--space-4)',
-        background: 'var(--surface-white)',
-        border: hover
-          ? '1px solid rgba(124, 58, 237, 0.4)'
-          : '1px solid #E5E5E5',
-        borderRadius: 'var(--radius-md)',
-        transform: hover ? 'translateY(-2px)' : 'translateY(0)',
-        transition: 'border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out)',
-      }}
-    >
-      <div>
-        {topping.category ? (
-          <div
-            style={{
-              fontFamily: 'var(--font-dm-sans)',
-              fontWeight: 400,
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--text-tertiary)',
-              marginBottom: 'var(--space-1)',
-            }}
-          >
-            {topping.category}
-          </div>
-        ) : null}
-        <div
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+        <span
           style={{
             fontFamily: 'var(--font-dm-sans)',
             fontWeight: 500,
-            fontSize: '14px',
+            fontSize: '15px',
             color: 'var(--text-primary)',
-            lineHeight: 1.3,
           }}
         >
           {topping.name}
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+        </span>
         <span
           style={{
             fontFamily: 'var(--font-syne)',
             fontWeight: 700,
-            fontSize: '16px',
+            fontSize: '15px',
             color: 'var(--brand-purple-light)',
           }}
         >
           +${topping.price.toFixed(2)}
         </span>
-        <AddedButton added={added} onAdd={onAdd} />
       </div>
+      <AddedButton added={added} onAdd={onAdd} />
     </div>
   )
 }
@@ -195,17 +101,12 @@ export default function ToppingsMenu({ flavor }: { flavor: Flavor }) {
     }, 1200)
   }
 
-  const curated: CuratedRow[] = [
-    { category: 'DRIZZLE', topping: flavor.toppings.drizzle },
-    { category: 'CRUNCH', topping: flavor.toppings.crunch },
-    { category: 'ELEVATE', topping: flavor.toppings.elevate },
-  ]
-
-  const extras = flavor.toppings.extraIncluded
+  const recommended = recommendedFor(flavor)
+  const recommendedNames = new Set(recommended.map((t) => t.name))
+  const more = TOPPINGS.filter((t) => !recommendedNames.has(t.name))
 
   return (
     <div className="anim-fade-up" style={{ width: '100%' }}>
-      {/* Header */}
       <h2
         style={{
           fontFamily: 'var(--font-syne)',
@@ -216,40 +117,41 @@ export default function ToppingsMenu({ flavor }: { flavor: Flavor }) {
           lineHeight: 1.1,
         }}
       >
-        Choose your toppings.
+        Make it yours.
       </h2>
-      <p
-        style={{
-          fontFamily: 'var(--font-dm-sans)',
-          fontWeight: 300,
-          fontSize: '15px',
-          color: 'var(--text-secondary)',
-          marginTop: 'var(--space-2)',
-          marginBottom: 0,
-        }}
-      >
-        These hit different with {flavor.name}:
-      </p>
 
-      {/* Curated three rows */}
-      <div style={{ marginTop: 'var(--space-6)' }}>
-        {curated.map((row, i) => {
-          const key = `curated-${i}`
-          return (
-            <CuratedToppingRow
-              key={key}
-              category={row.category}
-              topping={row.topping}
-              added={!!addedKeys[key]}
-              onAdd={() => flashAdded(key)}
-              isLast={i === curated.length - 1}
-            />
-          )
-        })}
-      </div>
+      {recommended.length > 0 && (
+        <>
+          <p
+            style={{
+              fontFamily: 'var(--font-dm-sans)',
+              fontWeight: 300,
+              fontSize: '15px',
+              color: 'var(--text-secondary)',
+              marginTop: 'var(--space-2)',
+              marginBottom: 0,
+            }}
+          >
+            These hit different with {flavor.name}:
+          </p>
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            {recommended.map((t, i) => {
+              const key = `rec-${i}`
+              return (
+                <ToppingRow
+                  key={key}
+                  topping={t}
+                  added={!!addedKeys[key]}
+                  onAdd={() => flashAdded(key)}
+                  isLast={i === recommended.length - 1}
+                />
+              )
+            })}
+          </div>
+        </>
+      )}
 
-      {/* Want more of what's inside */}
-      {extras.length > 0 && (
+      {more.length > 0 && (
         <>
           <h3
             style={{
@@ -263,68 +165,24 @@ export default function ToppingsMenu({ flavor }: { flavor: Flavor }) {
               marginBottom: 0,
             }}
           >
-            Want more of what&apos;s inside:
+            More toppings:
           </h3>
           <div style={{ marginTop: 'var(--space-3)' }}>
-            {extras.map((topping, i) => {
-              const key = `extra-${i}`
+            {more.map((t, i) => {
+              const key = `more-${i}`
               return (
-                <CuratedToppingRow
+                <ToppingRow
                   key={key}
-                  category="INCLUDED"
-                  topping={topping}
+                  topping={t}
                   added={!!addedKeys[key]}
                   onAdd={() => flashAdded(key)}
-                  isLast={i === extras.length - 1}
+                  isLast={i === more.length - 1}
                 />
               )
             })}
           </div>
         </>
       )}
-
-      {/* Or add anything */}
-      <h3
-        style={{
-          fontFamily: 'var(--font-dm-sans)',
-          fontWeight: 400,
-          fontSize: '13px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--text-tertiary)',
-          marginTop: 'var(--space-8)',
-          marginBottom: 'var(--space-4)',
-        }}
-      >
-        Or add anything:
-      </h3>
-      <style>{`
-        @media (min-width: 768px) {
-          .mdm-toppings-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-          }
-        }
-      `}</style>
-      <div
-        className="mdm-toppings-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 'var(--space-3)',
-        }}
-      >
-        {allToppings.map((topping, i) => {
-          const key = `grid-${i}`
-          return (
-            <GridToppingCard
-              key={key}
-              topping={topping}
-              added={!!addedKeys[key]}
-              onAdd={() => flashAdded(key)}
-            />
-          )
-        })}
-      </div>
     </div>
   )
 }
