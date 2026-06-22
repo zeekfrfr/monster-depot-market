@@ -8,6 +8,7 @@ import BeforeAfterSlider from './BeforeAfterSlider'
 import VideoPlaceholder from './VideoPlaceholder'
 import ThreeWays from './ThreeWays'
 import ToppingsMenu from './ToppingsMenu'
+import IngredientsAccordion from './IngredientsAccordion'
 import AddToCartButton from './AddToCartButton'
 
 interface FlavorPageProps {
@@ -296,6 +297,21 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
         >
           <ToppingsMenu flavor={flavor} />
         </section>
+
+        {/* Section 4b — product info accordion (below Three Ways, above QR). */}
+        {flavor.ingredients && (
+          <section
+            id="product-info"
+            style={{
+              width: '100%',
+              background: flavor.bg,
+              padding: '64px var(--space-6)',
+              boxSizing: 'border-box',
+            }}
+          >
+            <IngredientsAccordion flavor={flavor} />
+          </section>
+        )}
 
         {/* Section 5 — scan. */}
         <section

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { flavors, getFlavor } from '@/lib/products'
+import { activeFlavors as flavors, getFlavor } from '@/lib/products'
 import FlavorPage from '@/components/FlavorPage'
 
 export function generateStaticParams() {

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { flavors } from '@/lib/products'
+import { activeFlavors as flavors } from '@/lib/products'
 
 const policyLinks: { label: string; href: string }[] = [
   { label: 'Refund Policy', href: '/refunds' },

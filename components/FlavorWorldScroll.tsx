@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { flavors } from '@/lib/products'
+import { activeFlavors as flavors } from '@/lib/products'
 import FlavorCard from './FlavorCard'
 
 export default function FlavorWorldScroll() {
