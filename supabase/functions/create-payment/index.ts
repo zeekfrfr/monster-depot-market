@@ -14,11 +14,18 @@ const SQUARE_BASE = {
 // Browser-supplied prices are IGNORED; every line is recomputed here so totals
 // cannot be tampered with from the client.
 const FLAVORS: Record<string, string> = {
-  'blueberry-cake-donut': 'Blueberry Cake Donut',
-  'monster-cake': 'Monster Cake',
+  // Active launch lineup
+  'peanut-butter-brownie-cookie': 'Peanut Butter Brownie Cookie',
+  'cardamom-coffee-cake': 'Cardamom Coffee Cake',
+  'volcano-cake': 'Volcano Cake',
+  'strawberry-swirl': 'Strawberry Swirl',
+  'honey-cinnamon-crumble': 'Honey Cinnamon Crumble',
+  // Hidden (Phase 2) — data preserved, not publicly purchasable
   'vanilla-honey-crumble': 'Vanilla Honey Crumble',
   'apple-fritter': 'Apple Fritter',
   'strawberry-shortcake': 'Strawberry Shortcake',
+  'blueberry-cake-donut': 'Blueberry Cake Donut',
+  'monster-cookie': 'Monster Cookie',
 }
 
 // Base price in cents by pouch format.
@@ -37,25 +44,14 @@ const FORMAT_LABELS: Record<string, string> = {
   'weekly-sub': 'Weekly subscription',
 }
 
-// Every purchasable topping and its price in cents.
+// Every purchasable topping and its price in cents (mirrors TOPPINGS in lib/products.ts).
 const TOPPING_CENTS: Record<string, number> = {
-  'Vanilla cream drizzle': 99,
-  'Caramel drizzle': 89,
-  'Honey drizzle': 89,
-  'Strawberry jam reserve': 129,
-  'Blueberry jam reserve': 129,
-  'Almond crumble': 99,
-  'Walnut crumble': 99,
-  'Pecan crumble': 99,
-  'Vanilla crumble': 79,
-  'Cinnamon sugar packet': 79,
-  'Freeze dried blueberries': 99,
-  'Freeze dried strawberries': 99,
-  'Extra freeze dried blueberries': 99,
-  'Extra freeze dried strawberries': 99,
-  'Extra honey packet': 89,
-  'Extra crumble packet': 79,
-  'Extra cinnamon sugar': 79,
+  'Honey Drizzle': 89,
+  'Vanilla Glaze': 79,
+  'Stroopwafel Crumble': 99,
+  'Chocolate Chips': 99,
+  'Protein Peanut Butter Drizzle': 249,
+  'Strawberry Jam Reserve': 129,
 }
 
 interface IncomingTopping {
@@ -63,11 +59,17 @@ interface IncomingTopping {
   price?: number
 }
 
+interface IncomingMixEntry {
+  slug: string
+  qty?: number
+}
+
 interface IncomingItem {
   slug: string
   name?: string
   format: string
   toppings?: IncomingTopping[]
+  mix?: IncomingMixEntry[]
 }
 
 interface Shipping {
@@ -114,13 +116,6 @@ function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: 
     }
   }
 
-  // Pouch formats must reference a real flavor.
-  const flavorName = FLAVORS[item.slug]
-  if (!flavorName) return { error: `Unknown flavor: ${item.slug}` }
-
-  const base = FORMAT_CENTS[format]
-  if (base === undefined) return { error: `Unknown format: ${format}` }
-
   // Price toppings from the trusted map; reject anything unrecognized.
   const toppings: { name: string; price_cents: number }[] = []
   let toppingCents = 0
@@ -130,6 +125,45 @@ function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: 
     toppings.push({ name: t.name, price_cents: tc })
     toppingCents += tc
   }
+
+  // Mix & Match 7-pack: any blend of real flavors totaling exactly 7 pouches.
+  // Priced at the flat mixmatch7 rate regardless of which flavors are chosen.
+  if (format === 'mixmatch7') {
+    const mix: { slug: string; name: string; qty: number }[] = []
+    let count = 0
+    for (const m of item.mix ?? []) {
+      const mixName = FLAVORS[m?.slug]
+      if (!mixName) return { error: `Unknown flavor in mix: ${m?.slug}` }
+      const qty = Number(m?.qty ?? 0)
+      if (!Number.isInteger(qty) || qty < 1) return { error: `Invalid mix quantity for ${m?.slug}` }
+      mix.push({ slug: m.slug, name: mixName, qty })
+      count += qty
+    }
+    if (count !== 7) return { error: 'Mix & Match must total exactly 7 pouches.' }
+
+    const base = FORMAT_CENTS.mixmatch7
+    const lineCents = base + toppingCents
+    return {
+      cents: lineCents,
+      line: {
+        slug: 'mixmatch7',
+        name: 'Mix & Match 7-pack',
+        format,
+        formatLabel: FORMAT_LABELS[format],
+        base_cents: base,
+        mix,
+        toppings,
+        line_cents: lineCents,
+      },
+    }
+  }
+
+  // Single / 7-pack must reference a real flavor.
+  const flavorName = FLAVORS[item.slug]
+  if (!flavorName) return { error: `Unknown flavor: ${item.slug}` }
+
+  const base = FORMAT_CENTS[format]
+  if (base === undefined) return { error: `Unknown format: ${format}` }
 
   const lineCents = base + toppingCents
   return {

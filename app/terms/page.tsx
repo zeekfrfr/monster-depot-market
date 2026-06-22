@@ -79,9 +79,7 @@ export default function Terms() {
 
       <h2 style={subheading}>Disclaimers</h2>
       <p style={body}>
-        These statements have not been evaluated by the Food and Drug Administration. These
-        products are not intended to diagnose, treat, cure, or prevent any disease. The site
-        and all products are provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo;
+        The site and all products are provided &ldquo;as is&rdquo; and &ldquo;as available,&rdquo;
         without warranties of any kind, whether express or implied, to the fullest extent
         permitted by law.
       </p>

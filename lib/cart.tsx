@@ -15,6 +15,13 @@ export interface CartTopping {
   price: number
 }
 
+// One flavor's share of a Mix & Match 7-pack (qty pouches of that flavor).
+export interface CartMixEntry {
+  slug: string
+  name: string
+  qty: number
+}
+
 export interface CartItem {
   id: string // unique: `${slug}-${format}-${timestamp}`
   slug: string
@@ -24,6 +31,8 @@ export interface CartItem {
   toppings: CartTopping[]
   bg: string
   accent: string
+  // Present only on mixmatch7 lines: the chosen pouches (qtys total 7).
+  mix?: CartMixEntry[]
 }
 
 export const FORMAT_LABELS: Record<CartFormat, string> = {

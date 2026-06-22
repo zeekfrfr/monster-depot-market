@@ -151,24 +151,6 @@ export default function Footer() {
         ))}
       </nav>
 
-      {/* Row 4: FDA disclaimer */}
-      <p
-        style={{
-          fontFamily: 'var(--font-dm-sans)',
-          fontWeight: 300,
-          fontSize: '11px',
-          color: 'var(--text-tertiary)',
-          textAlign: 'center',
-          maxWidth: '480px',
-          margin: '16px auto',
-          lineHeight: 1.5,
-        }}
-      >
-        These statements have not been evaluated by the Food and Drug
-        Administration. This product is not intended to diagnose, treat, cure, or
-        prevent any disease.
-      </p>
-
       {/* Row 5: copyright */}
       <p
         style={{

@@ -116,33 +116,34 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
             label="Add to cart"
             style={{
               background: flavor.accent,
-              color: flavor.text === '#FFFFFF' ? '#1A1A1A' : '#FFFFFF',
+              color: '#FFFFFF',
               fontSize: '15px',
             }}
           />
           <Link
             href={`/${flavor.slug}`}
-            aria-label={`See more about ${flavor.name}`}
+            aria-label={`Explore ${flavor.name}`}
             className="flavor-card-seemore"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontFamily: 'var(--font-syne)',
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: '15px',
               lineHeight: 1.1,
-              color: flavor.text,
+              background: flavor.text,
+              color: flavor.bg,
               borderRadius: 'var(--radius-full)',
-              border: `1px solid ${flavor.text}`,
+              border: 'none',
               padding: '14px 32px',
               minHeight: 52,
-              opacity: 0.75,
+              opacity: 0.9,
               textDecoration: 'none',
               transition: 'opacity var(--dur-fast) var(--ease-out)',
             }}
           >
-            See more →
+            Explore the flavor →
           </Link>
         </div>
       </div>

@@ -77,6 +77,25 @@ export default function Nav() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
         <Link
+          href="/recipes"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '40px',
+            padding: '0 var(--space-2)',
+            fontFamily: 'var(--font-syne)',
+            fontWeight: 700,
+            fontSize: '15px',
+            color: textColor,
+            textDecoration: 'none',
+            letterSpacing: '-0.01em',
+            transition: 'color var(--dur-base) var(--ease-out)',
+          }}
+        >
+          Recipes
+        </Link>
+        <Link
           href={signedIn ? '/account' : '/login'}
           aria-label={signedIn ? 'Your account' : 'Sign in'}
           style={{

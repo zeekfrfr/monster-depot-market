@@ -361,17 +361,38 @@ function CartLine({
         >
           {item.name}
         </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-dm-sans)',
-            fontWeight: 300,
-            fontSize: '13px',
-            color: 'var(--text-secondary)',
-            marginTop: '2px',
-          }}
-        >
-          {FORMAT_LABELS[item.format]}
-        </div>
+        {item.name !== FORMAT_LABELS[item.format] && (
+          <div
+            style={{
+              fontFamily: 'var(--font-dm-sans)',
+              fontWeight: 300,
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              marginTop: '2px',
+            }}
+          >
+            {FORMAT_LABELS[item.format]}
+          </div>
+        )}
+
+        {item.mix && item.mix.length > 0 && (
+          <div style={{ marginLeft: '20px', marginTop: 'var(--space-2)' }}>
+            {item.mix.map((m) => (
+              <div
+                key={m.slug}
+                style={{
+                  fontFamily: 'var(--font-dm-sans)',
+                  fontWeight: 300,
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}
+              >
+                {m.qty}× {m.name}
+              </div>
+            ))}
+          </div>
+        )}
 
         {item.toppings.map((topping, idx) => (
           <div

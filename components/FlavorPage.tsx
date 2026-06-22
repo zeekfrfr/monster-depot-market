@@ -227,7 +227,7 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
                 label="Add to cart  $8.99"
                 style={{
                   background: flavor.accent,
-                  color: flavor.text === '#FFFFFF' ? '#1A1A1A' : '#FFFFFF',
+                  color: '#FFFFFF',
                 }}
               />
             </div>
