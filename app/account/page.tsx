@@ -30,6 +30,7 @@ interface Order {
   status: string
   total: number
   items: OrderItem[]
+  tracking_number: string | null
 }
 
 interface Profile {
@@ -46,10 +47,13 @@ interface Profile {
 type Tab = 'orders' | 'recipes' | 'settings'
 
 const STATUS_LABELS: Record<string, string> = {
+  pending: 'Processing',
   paid: 'Processing',
   processing: 'Processing',
+  packed: 'Packed',
   shipped: 'Shipped',
   delivered: 'Delivered',
+  cancelled: 'Cancelled',
 }
 
 const sectionLabel: React.CSSProperties = {
@@ -104,7 +108,7 @@ export default function AccountPage() {
         return
       }
       const [{ data: orderRows }, { data: profileRow }, { data: savedRows }] = await Promise.all([
-        supabase!.from('orders').select('id, created_at, status, total, items').order('created_at', { ascending: false }),
+        supabase!.from('orders').select('id, created_at, status, total, items, tracking_number').order('created_at', { ascending: false }),
         supabase!.from('profiles').select('*').eq('id', user.id).maybeSingle(),
         supabase!.from('saved_recipes').select('saved_at, recipes(*)').order('saved_at', { ascending: false }),
       ])
@@ -283,6 +287,11 @@ export default function AccountPage() {
                       {STATUS_LABELS[order.status] ?? order.status}
                     </span>
                   </div>
+                  {order.tracking_number && (
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      Tracking: <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{order.tracking_number}</span>
+                    </p>
+                  )}
                   {order.items.map((item, i) => (
                     <p key={i} style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                       {item.name} · {item.formatLabel}

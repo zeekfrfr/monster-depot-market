@@ -13,6 +13,7 @@ export default function Nav() {
   const { count, openCart } = useCart()
   const [scrolled, setScrolled] = useState(false)
   const [signedIn, setSignedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -25,11 +26,23 @@ export default function Nav() {
     const supabase = getSupabase()
     if (!supabase) return
     let active = true
-    supabase.auth.getUser().then(({ data }) => {
-      if (active) setSignedIn(!!data.user)
-    })
+    const syncUser = async (email?: string | null) => {
+      if (active) setSignedIn(!!email)
+      if (!email) {
+        if (active) setIsAdmin(false)
+        return
+      }
+      const { data } = await supabase
+        .from('admin_users')
+        .select('email')
+        .eq('email', email)
+        .eq('status', 'active')
+        .maybeSingle()
+      if (active) setIsAdmin(!!data)
+    }
+    supabase.auth.getUser().then(({ data }) => syncUser(data.user?.email))
     const { data } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSignedIn(!!session?.user),
+      syncUser(session?.user?.email),
     )
     return () => {
       active = false
@@ -95,6 +108,27 @@ export default function Nav() {
         >
           Recipes
         </Link>
+        {isAdmin && (
+          <Link
+            href="/admin"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '40px',
+              padding: '0 var(--space-2)',
+              fontFamily: 'var(--font-syne)',
+              fontWeight: 700,
+              fontSize: '15px',
+              color: textColor,
+              textDecoration: 'none',
+              letterSpacing: '-0.01em',
+              transition: 'color var(--dur-base) var(--ease-out)',
+            }}
+          >
+            Admin
+          </Link>
+        )}
         <Link
           href={signedIn ? '/account' : '/login'}
           aria-label={signedIn ? 'Your account' : 'Sign in'}
