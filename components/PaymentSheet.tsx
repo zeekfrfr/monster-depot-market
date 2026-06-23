@@ -7,6 +7,8 @@ import { getSupabase } from '@/lib/supabase'
 
 interface PaymentSheetProps {
   total: number
+  subtotal: number
+  shippingCost: number
   count: number
   onBack: () => void
   onSuccess: (orderId: string, email: string) => void
@@ -20,7 +22,7 @@ interface SquareCard {
 
 const REQUIRED = ['email', 'name', 'address1', 'city', 'state', 'zip'] as const
 
-export default function PaymentSheet({ total, count, onBack, onSuccess }: PaymentSheetProps) {
+export default function PaymentSheet({ total, subtotal, shippingCost, count, onBack, onSuccess }: PaymentSheetProps) {
   const { cart, clearCart } = useCart()
   const cardRef = useRef<SquareCard | null>(null)
 
@@ -352,28 +354,33 @@ export default function PaymentSheet({ total, count, onBack, onSuccess }: Paymen
             {/* Order summary */}
             <div
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
                 padding: 'var(--space-3) 0',
                 borderTop: '1px solid var(--text-disabled)',
                 marginBottom: 'var(--space-2)',
               }}
             >
-              <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                {count} {count === 1 ? 'item' : 'items'}
-              </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-syne)',
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  letterSpacing: '-0.02em',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                ${total.toFixed(2)}
-              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                <span>{count} {count === 1 ? 'item' : 'items'}</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                <span>Shipping</span>
+                <span>{shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Total</span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-syne)',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    letterSpacing: '-0.02em',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  ${total.toFixed(2)}
+                </span>
+              </div>
             </div>
 
             {error && (

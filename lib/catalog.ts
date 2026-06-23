@@ -13,6 +13,7 @@ export interface Catalog {
   sevenPack: number | null
   mixMatch: number | null
   weeklySub: number | null
+  shipping: number | null
   toppings: CatalogTopping[]
 }
 
@@ -23,6 +24,7 @@ export const EMPTY_CATALOG: Catalog = {
   sevenPack: null,
   mixMatch: null,
   weeklySub: null,
+  shipping: null,
   toppings: [],
 }
 
@@ -66,6 +68,7 @@ export async function getCatalog(): Promise<Catalog> {
     sevenPack: fmt['7pack'] ?? null,
     mixMatch: fmt['mixmatch7'] ?? null,
     weeklySub: fmt['weekly-sub'] ?? null,
+    shipping: fmt['shipping'] ?? null,
     toppings: toppings.map((t) => ({ name: t.name, price: t.price_cents / 100 })),
   }
 }

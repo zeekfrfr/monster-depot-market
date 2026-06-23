@@ -41,12 +41,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Trusted catalog (prices + toppings) fetched server-side and seeded into the
   // client provider, so DB edits go live via ISR without a redeploy.
   const catalog = await getCatalog()
+  const gaId = process.env.NEXT_PUBLIC_GA_ID
 
   return (
     <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
       <body>
         <a href="#main" className="skip-link">Skip to main content</a>
         <Script src={squareSrc} strategy="lazyOnload" />
+        {gaId && (
+          <>
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${gaId}');`}
+            </Script>
+          </>
+        )}
         <CartProvider>
           <CatalogProvider initial={catalog}>
             <SavedRecipesProvider>

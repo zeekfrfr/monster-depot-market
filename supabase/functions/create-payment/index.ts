@@ -257,6 +257,12 @@ Deno.serve(async (req) => {
     totalCents += priced.cents
   }
 
+  // Flat shipping on physical pouches, charged once per order. Weekly
+  // subscription and the 50c test product ship free. DB-driven amount.
+  const shippable = cartItems.some((i) => i.format !== 'weekly-sub' && i.slug !== 'test-product')
+  const shippingCents = shippable ? (catalog.formatCents['shipping'] ?? 500) : 0
+  totalCents += shippingCents
+
   if (totalCents <= 0) return err(400, 'Order total must be greater than zero.')
 
   // Select Square credentials by environment.
@@ -303,6 +309,7 @@ Deno.serve(async (req) => {
       email,
       items: orderItems,
       total: totalCents,
+      shipping_cents: shippingCents,
       status: 'paid',
       square_payment_id: squarePaymentId,
       customer_name: shipping.name,

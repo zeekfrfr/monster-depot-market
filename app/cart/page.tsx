@@ -2,9 +2,14 @@
 
 import Link from 'next/link'
 import { useCart, FORMAT_LABELS, itemTotal } from '../../lib/cart'
+import { useCatalog } from '@/lib/catalogContext'
 
 export default function CartPage() {
   const { cart, removeItem, removeTopping, total, openCart } = useCart()
+  const catalog = useCatalog()
+  const shippable = cart.some((i) => i.format !== 'weekly-sub' && i.slug !== 'test-product')
+  const shipping = shippable ? (catalog?.shipping ?? 5) : 0
+  const grandTotal = total + shipping
 
   return (
     <main style={page}>
@@ -73,16 +78,26 @@ export default function CartPage() {
           </ul>
 
           <div style={footer}>
-            <div style={subtotalRow}>
-              <span style={subtotalLabel}>Subtotal</span>
-              <span style={subtotalValue}>${total.toFixed(2)}</span>
+            <div>
+              <div style={{ ...subtotalRow, marginBottom: '6px' }}>
+                <span style={subtotalLabel}>Subtotal</span>
+                <span style={subtotalLabel}>${total.toFixed(2)}</span>
+              </div>
+              <div style={{ ...subtotalRow, marginBottom: '10px' }}>
+                <span style={subtotalLabel}>Shipping</span>
+                <span style={subtotalLabel}>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+              </div>
+              <div style={subtotalRow}>
+                <span style={subtotalLabel}>Total</span>
+                <span style={subtotalValue}>${grandTotal.toFixed(2)}</span>
+              </div>
             </div>
 
             <button type="button" onClick={openCart} style={checkoutBtn}>
               Checkout →
             </button>
 
-            <p style={shippingNote}>Free shipping on all subscriptions</p>
+            <p style={shippingNote}>Prices include tax · subscriptions ship free</p>
           </div>
         </>
       )}

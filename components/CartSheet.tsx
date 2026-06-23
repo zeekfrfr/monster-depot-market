@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useCart, FORMAT_LABELS, itemTotal, type CartItem } from '@/lib/cart'
+import { useCatalog } from '@/lib/catalogContext'
 import PaymentSheet from './PaymentSheet'
 
 type View = 'cart' | 'payment' | 'confirmed'
@@ -16,11 +17,16 @@ export default function CartSheet() {
     total,
     count,
   } = useCart()
+  const catalog = useCatalog()
 
   const [view, setView] = useState<View>('cart')
   const [confirm, setConfirm] = useState<{ orderId: string; email: string } | null>(null)
 
   if (!isOpen) return null
+
+  const shippable = cart.some((i) => i.format !== 'weekly-sub' && i.slug !== 'test-product')
+  const shipping = shippable ? (catalog?.shipping ?? 5) : 0
+  const grandTotal = total + shipping
 
   const handleClose = () => {
     closeCart()
@@ -70,7 +76,9 @@ export default function CartSheet() {
       >
         {view === 'payment' ? (
           <PaymentSheet
-            total={total}
+            total={grandTotal}
+            subtotal={total}
+            shippingCost={shipping}
             count={count}
             onBack={() => setView('cart')}
             onSuccess={(orderId, email) => {
@@ -88,6 +96,8 @@ export default function CartSheet() {
           <CartView
             cart={cart}
             total={total}
+            shipping={shipping}
+            grandTotal={grandTotal}
             removeItem={removeItem}
             removeTopping={removeTopping}
             onClose={closeCart}
@@ -104,6 +114,8 @@ export default function CartSheet() {
 function CartView({
   cart,
   total,
+  shipping,
+  grandTotal,
   removeItem,
   removeTopping,
   onClose,
@@ -111,6 +123,8 @@ function CartView({
 }: {
   cart: CartItem[]
   total: number
+  shipping: number
+  grandTotal: number
   removeItem: (id: string) => void
   removeTopping: (id: string, toppingIndex: number) => void
   onClose: () => void
@@ -248,35 +262,19 @@ function CartView({
           background: 'var(--surface-white)',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--space-3)',
-          }}
-        >
-          <span
-            style={{
-              fontFamily: 'var(--font-dm-sans)',
-              fontWeight: 400,
-              fontSize: '14px',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Subtotal
-          </span>
-          <span
-            style={{
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 700,
-              fontSize: '20px',
-              letterSpacing: '-0.02em',
-              color: 'var(--text-primary)',
-            }}
-          >
-            ${total.toFixed(2)}
-          </span>
+        <div style={{ marginBottom: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-dm-sans)', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+            <span>Subtotal</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-dm-sans)', fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+            <span>Shipping</span>
+            <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 400, fontSize: '14px', color: 'var(--text-secondary)' }}>Total</span>
+            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '20px', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>${grandTotal.toFixed(2)}</span>
+          </div>
         </div>
         <button
           onClick={onCheckout}
@@ -307,7 +305,7 @@ function CartView({
             margin: 'var(--space-3) 0 0',
           }}
         >
-          Free shipping on all subscriptions
+          Prices include tax · subscriptions ship free
         </p>
       </div>
     </>
