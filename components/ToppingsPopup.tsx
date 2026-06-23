@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import type { Flavor, Topping } from '@/lib/products'
-import { TOPPINGS, recommendedFor, activeFlavors } from '@/lib/products'
+import { TOPPINGS, activeFlavors } from '@/lib/products'
 import { useCart, type CartTopping, type CartFormat, type CartMixEntry } from '@/lib/cart'
+import { useCatalog } from '@/lib/catalogContext'
 
 type ToppingsPopupProps = {
   flavor: Flavor
@@ -19,6 +20,13 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
   const [selected, setSelected] = useState<CartTopping[]>([])
   // slug -> quantity, used only when format === 'mixmatch7'.
   const [mix, setMix] = useState<Record<string, number>>({})
+
+  // Live catalog (DB-driven) with static lib/products.ts values as fallback.
+  const catalog = useCatalog()
+  const singlePrice = catalog?.flavorPrice[flavor.slug] ?? flavor.price
+  const sevenPackPrice = catalog?.sevenPack ?? flavor.sevenPackPrice
+  const mixMatchPrice = catalog?.mixMatch ?? flavor.mixMatchPrice
+  const allToppings: Topping[] = catalog?.toppings?.length ? catalog.toppings : TOPPINGS
 
   // Escape closes the sheet (backdrop click and the ✕ button also close it).
   useEffect(() => {
@@ -53,16 +61,18 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
 
   const basePrice =
     format === 'single'
-      ? flavor.price
+      ? singlePrice
       : format === '7pack'
-        ? flavor.sevenPackPrice
-        : flavor.mixMatchPrice
+        ? sevenPackPrice
+        : mixMatchPrice
   const toppingsTotal = format === 'single' ? selected.reduce((s, t) => s + t.price, 0) : 0
   const subtotal = basePrice + toppingsTotal
 
-  const recommended = recommendedFor(flavor)
+  const recommended = flavor.recommendedToppings
+    .map((n) => allToppings.find((t) => t.name === n))
+    .filter((t): t is Topping => Boolean(t))
   const recommendedNames = new Set(recommended.map((t) => t.name))
-  const more = TOPPINGS.filter((t) => !recommendedNames.has(t.name))
+  const more = allToppings.filter((t) => !recommendedNames.has(t.name))
 
   const canAdd = format !== 'mixmatch7' || mixCount === MIX_TOTAL
 
@@ -77,7 +87,7 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
         slug: 'mixmatch7',
         name: 'Mix & Match 7-pack',
         format: 'mixmatch7',
-        price: flavor.mixMatchPrice,
+        price: mixMatchPrice,
         toppings: [],
         bg: flavor.bg,
         accent: flavor.accent,
@@ -89,7 +99,7 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
         slug: flavor.slug,
         name: flavor.name,
         format: '7pack',
-        price: flavor.sevenPackPrice,
+        price: sevenPackPrice,
         toppings: [],
         bg: flavor.bg,
         accent: flavor.accent,
@@ -100,7 +110,7 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
         slug: flavor.slug,
         name: flavor.name,
         format: 'single',
-        price: flavor.price,
+        price: singlePrice,
         toppings: selected,
         bg: flavor.bg,
         accent: flavor.accent,
@@ -227,21 +237,21 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
             active={format === 'single'}
             title="Single pouch"
             sub="One pouch of this flavor"
-            price={`$${flavor.price.toFixed(2)}`}
+            price={`$${singlePrice.toFixed(2)}`}
             onClick={() => setFormat('single')}
           />
           <FormatOption
             active={format === '7pack'}
             title="7-pack"
             sub={`Seven pouches of ${flavor.name}`}
-            price={`$${flavor.sevenPackPrice.toFixed(2)}`}
+            price={`$${sevenPackPrice.toFixed(2)}`}
             onClick={() => setFormat('7pack')}
           />
           <FormatOption
             active={format === 'mixmatch7'}
             title="Mix & Match 7-pack"
             sub="Build your own — any 7 flavors"
-            price={`$${flavor.mixMatchPrice.toFixed(2)}`}
+            price={`$${mixMatchPrice.toFixed(2)}`}
             onClick={() => setFormat('mixmatch7')}
           />
         </div>

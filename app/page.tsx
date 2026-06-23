@@ -6,6 +6,7 @@ import FlavorWorldScroll from '@/components/FlavorWorldScroll'
 import SubscriptionHook from '@/components/SubscriptionHook'
 import ContentFeedPlaceholder from '@/components/ContentFeedPlaceholder'
 import { TOPPINGS } from '@/lib/products'
+import { useCatalog } from '@/lib/catalogContext'
 
 export default function HomePage() {
   const [addedIndex, setAddedIndex] = useState<number | null>(null)
@@ -185,6 +186,8 @@ function ToppingsGrid({
   addedIndex: number | null
   onAdd: (index: number) => void
 }) {
+  const catalog = useCatalog()
+  const toppings = catalog?.toppings?.length ? catalog.toppings : TOPPINGS
   return (
     <>
       <style>{`
@@ -210,7 +213,7 @@ function ToppingsGrid({
       `}</style>
 
       <div className="mdm-addons-grid">
-        {TOPPINGS.map((topping, index) => {
+        {toppings.map((topping, index) => {
           const added = addedIndex === index
           return (
             <div

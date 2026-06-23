@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Flavor } from '@/lib/products'
 import { needsTextScrim } from '@/lib/products'
+import { useCatalog } from '@/lib/catalogContext'
 import AddToCartButton from './AddToCartButton'
 
 interface FlavorCardProps {
@@ -11,6 +12,9 @@ interface FlavorCardProps {
 
 export default function FlavorCard({ flavor }: FlavorCardProps) {
   const scrim = needsTextScrim(flavor.slug)
+  const catalog = useCatalog()
+  const price = catalog?.flavorPrice[flavor.slug] ?? flavor.price
+  const sevenPack = catalog?.sevenPack ?? flavor.sevenPackPrice
 
   const nameStyle: React.CSSProperties = {
     fontFamily: 'var(--font-syne)',
@@ -98,7 +102,7 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
             marginBottom: 0,
           }}
         >
-          {`$${flavor.price.toFixed(2)} · 7-pack $${flavor.sevenPackPrice.toFixed(2)}`}
+          {`$${price.toFixed(2)} · 7-pack $${sevenPack.toFixed(2)}`}
         </p>
 
         <div

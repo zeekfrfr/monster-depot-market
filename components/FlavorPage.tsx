@@ -10,6 +10,7 @@ import ThreeWays from './ThreeWays'
 import ToppingsMenu from './ToppingsMenu'
 import IngredientsAccordion from './IngredientsAccordion'
 import AddToCartButton from './AddToCartButton'
+import { useCatalog } from '@/lib/catalogContext'
 
 interface FlavorPageProps {
   flavor: Flavor
@@ -23,6 +24,8 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
 
   const scrim = needsTextScrim(flavor.slug)
   const isMonster = flavor.slug === 'monster-cookie'
+  const catalog = useCatalog()
+  const price = catalog?.flavorPrice[flavor.slug] ?? flavor.price
 
   // Remove the entrance overlay once its bgExpand run completes (300ms).
   useEffect(() => {
@@ -224,7 +227,7 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
               {/* Add to cart — solid accent. */}
               <AddToCartButton
                 flavor={flavor}
-                label="Add to cart  $8.99"
+                label={`Add to cart  $${price.toFixed(2)}`}
                 style={{
                   background: flavor.accent,
                   color: '#FFFFFF',

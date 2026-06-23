@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import type { Flavor, Topping } from '@/lib/products'
-import { TOPPINGS, recommendedFor } from '@/lib/products'
+import { TOPPINGS } from '@/lib/products'
+import { useCatalog } from '@/lib/catalogContext'
 
 function AddedButton({ added, onAdd }: { added: boolean; onAdd: () => void }) {
   return (
@@ -101,9 +102,13 @@ export default function ToppingsMenu({ flavor }: { flavor: Flavor }) {
     }, 1200)
   }
 
-  const recommended = recommendedFor(flavor)
+  const catalog = useCatalog()
+  const allToppings: Topping[] = catalog?.toppings?.length ? catalog.toppings : TOPPINGS
+  const recommended = flavor.recommendedToppings
+    .map((n) => allToppings.find((t) => t.name === n))
+    .filter((t): t is Topping => Boolean(t))
   const recommendedNames = new Set(recommended.map((t) => t.name))
-  const more = TOPPINGS.filter((t) => !recommendedNames.has(t.name))
+  const more = allToppings.filter((t) => !recommendedNames.has(t.name))
 
   return (
     <div className="anim-fade-up" style={{ width: '100%' }}>

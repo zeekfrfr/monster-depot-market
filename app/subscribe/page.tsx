@@ -2,6 +2,7 @@
 
 import { useCart } from '@/lib/cart'
 import { WEEKLY_SUB_PRICE } from '@/lib/products'
+import { useCatalog } from '@/lib/catalogContext'
 
 const weeklyChecklist = [
   '7 pouches (one flavor or mix)',
@@ -50,6 +51,8 @@ function Check({ text, textColor }: { text: string; textColor?: string }) {
 
 export default function SubscribePage() {
   const { addItem, openCart } = useCart()
+  const catalog = useCatalog()
+  const weeklyPrice = catalog?.weeklySub ?? WEEKLY_SUB_PRICE
 
   const handleStartWeek = () => {
     addItem({
@@ -57,7 +60,7 @@ export default function SubscribePage() {
       slug: 'weekly-sub',
       name: 'Weekly Subscription',
       format: 'weekly-sub',
-      price: WEEKLY_SUB_PRICE,
+      price: weeklyPrice,
       toppings: [],
       bg: 'var(--brand-purple-dark)',
       accent: 'var(--brand-purple-light)',
@@ -172,7 +175,7 @@ export default function SubscribePage() {
                   lineHeight: 1,
                 }}
               >
-                ${WEEKLY_SUB_PRICE.toFixed(2)}
+                ${weeklyPrice.toFixed(2)}
               </span>
               <span
                 style={{

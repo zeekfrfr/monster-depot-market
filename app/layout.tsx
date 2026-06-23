@@ -3,6 +3,8 @@ import { Syne, DM_Sans } from 'next/font/google'
 import Script from 'next/script'
 import { CartProvider } from '@/lib/cart'
 import { SavedRecipesProvider } from '@/lib/savedRecipes'
+import { getCatalog } from '@/lib/catalog'
+import { CatalogProvider } from '@/lib/catalogContext'
 import AgeGate from '@/components/AgeGate'
 import Nav from '@/components/Nav'
 import CartSheet from '@/components/CartSheet'
@@ -31,10 +33,14 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.ico' },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const squareSrc = process.env.NEXT_PUBLIC_SQUARE_ENVIRONMENT === 'production'
     ? 'https://web.squarecdn.com/v1/square.js'
     : 'https://sandbox.web.squarecdn.com/v1/square.js'
+
+  // Trusted catalog (prices + toppings) fetched server-side and seeded into the
+  // client provider, so DB edits go live via ISR without a redeploy.
+  const catalog = await getCatalog()
 
   return (
     <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
@@ -42,13 +48,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="skip-link">Skip to main content</a>
         <Script src={squareSrc} strategy="lazyOnload" />
         <CartProvider>
-          <SavedRecipesProvider>
-            <AgeGate />
-            <Nav />
-            <main id="main">{children}</main>
-            <Footer />
-            <CartSheet />
-          </SavedRecipesProvider>
+          <CatalogProvider initial={catalog}>
+            <SavedRecipesProvider>
+              <AgeGate />
+              <Nav />
+              <main id="main">{children}</main>
+              <Footer />
+              <CartSheet />
+            </SavedRecipesProvider>
+          </CatalogProvider>
         </CartProvider>
       </body>
     </html>

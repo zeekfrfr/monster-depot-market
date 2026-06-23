@@ -10,32 +10,35 @@ const SQUARE_BASE = {
   production: 'https://connect.squareup.com',
 }
 
-// ---- Trusted server-side catalog (mirrors lib/products.ts). ----
-// Browser-supplied prices are IGNORED; every line is recomputed here so totals
-// cannot be tampered with from the client.
-const FLAVORS: Record<string, string> = {
-  // Active launch lineup
-  'peanut-butter-brownie-cookie': 'Peanut Butter Brownie Cookie',
-  'cardamom-coffee-cake': 'Cardamom Coffee Cake',
-  'volcano-cake': 'Volcano Cake',
-  'strawberry-swirl': 'Strawberry Swirl',
-  'honey-cinnamon-crumble': 'Honey Cinnamon Crumble',
-  // Hidden (Phase 2) — data preserved, not publicly purchasable
-  'vanilla-honey-crumble': 'Vanilla Honey Crumble',
-  'apple-fritter': 'Apple Fritter',
-  'strawberry-shortcake': 'Strawberry Shortcake',
-  'blueberry-cake-donut': 'Blueberry Cake Donut',
-  'monster-cookie': 'Monster Cookie',
+// ---- Trusted catalog ----
+// The live catalog lives in the DB (mdm_flavors / mdm_toppings / mdm_pricing) so
+// prices and toppings can change without redeploying this function. The maps
+// below are a FALLBACK only — used if the DB is unreachable or a table is empty,
+// so a bad fetch can never take checkout down. Browser-supplied prices are always
+// ignored; every line is recomputed here.
+const FLAVORS_FALLBACK: Record<string, { name: string; price_cents: number }> = {
+  'peanut-butter-brownie-cookie': { name: 'Peanut Butter Brownie Cookie', price_cents: 899 },
+  'cardamom-coffee-cake': { name: 'Cardamom Coffee Cake', price_cents: 899 },
+  'volcano-cake': { name: 'Volcano Cake', price_cents: 899 },
+  'strawberry-swirl': { name: 'Strawberry Swirl', price_cents: 899 },
+  'honey-cinnamon-crumble': { name: 'Honey Cinnamon Crumble', price_cents: 899 },
 }
 
-// Base price in cents by pouch format.
-const FORMAT_CENTS: Record<string, number> = {
+const FORMAT_CENTS_FALLBACK: Record<string, number> = {
   single: 899,
   '7pack': 2999,
   mixmatch7: 3199,
+  'weekly-sub': 2799,
 }
 
-const WEEKLY_SUB_CENTS = 2799
+const TOPPING_CENTS_FALLBACK: Record<string, number> = {
+  'Honey Drizzle': 89,
+  'Vanilla Glaze': 79,
+  'Stroopwafel Crumble': 99,
+  'Chocolate Chips': 99,
+  'Protein Peanut Butter Drizzle': 249,
+  'Strawberry Jam Reserve': 129,
+}
 
 const FORMAT_LABELS: Record<string, string> = {
   single: 'Single',
@@ -44,14 +47,43 @@ const FORMAT_LABELS: Record<string, string> = {
   'weekly-sub': 'Weekly subscription',
 }
 
-// Every purchasable topping and its price in cents (mirrors TOPPINGS in lib/products.ts).
-const TOPPING_CENTS: Record<string, number> = {
-  'Honey Drizzle': 89,
-  'Vanilla Glaze': 79,
-  'Stroopwafel Crumble': 99,
-  'Chocolate Chips': 99,
-  'Protein Peanut Butter Drizzle': 249,
-  'Strawberry Jam Reserve': 129,
+interface Catalog {
+  flavors: Record<string, { name: string; price_cents: number }>
+  toppingCents: Record<string, number>
+  formatCents: Record<string, number>
+}
+
+// deno-lint-ignore no-explicit-any
+async function loadCatalog(supabase: any): Promise<Catalog> {
+  try {
+    const [f, t, p] = await Promise.all([
+      supabase.from('mdm_flavors').select('slug,name,price_cents').eq('active', true),
+      supabase.from('mdm_toppings').select('name,price_cents').eq('active', true),
+      supabase.from('mdm_pricing').select('format,price_cents'),
+    ])
+
+    const flavors: Record<string, { name: string; price_cents: number }> = {}
+    for (const r of f.data ?? []) flavors[r.slug] = { name: r.name, price_cents: r.price_cents }
+
+    const toppingCents: Record<string, number> = {}
+    for (const r of t.data ?? []) toppingCents[r.name] = r.price_cents
+
+    const formatCents: Record<string, number> = {}
+    for (const r of p.data ?? []) formatCents[r.format] = r.price_cents
+
+    // Fall back per-map if a table came back empty (misconfig / fetch issue).
+    return {
+      flavors: Object.keys(flavors).length ? flavors : FLAVORS_FALLBACK,
+      toppingCents: Object.keys(toppingCents).length ? toppingCents : TOPPING_CENTS_FALLBACK,
+      formatCents: Object.keys(formatCents).length ? formatCents : FORMAT_CENTS_FALLBACK,
+    }
+  } catch (_e) {
+    return {
+      flavors: FLAVORS_FALLBACK,
+      toppingCents: TOPPING_CENTS_FALLBACK,
+      formatCents: FORMAT_CENTS_FALLBACK,
+    }
+  }
 }
 
 interface IncomingTopping {
@@ -96,31 +128,32 @@ function ok(data: object): Response {
 }
 
 // Returns the priced line item, or an error string if the item is invalid.
-function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: number } | { error: string } {
+function priceItem(item: IncomingItem, catalog: Catalog): { line: Record<string, unknown>; cents: number } | { error: string } {
   const format = item.format
   if (!FORMAT_LABELS[format]) return { error: `Unknown format: ${format}` }
 
   // Subscription is a flat one-time charge for launch (no recurring billing).
   if (format === 'weekly-sub') {
+    const cents = catalog.formatCents['weekly-sub'] ?? FORMAT_CENTS_FALLBACK['weekly-sub']
     return {
-      cents: WEEKLY_SUB_CENTS,
+      cents,
       line: {
         slug: 'weekly-sub',
         name: item.name ?? 'Weekly Subscription',
         format,
         formatLabel: FORMAT_LABELS[format],
-        base_cents: WEEKLY_SUB_CENTS,
+        base_cents: cents,
         toppings: [],
-        line_cents: WEEKLY_SUB_CENTS,
+        line_cents: cents,
       },
     }
   }
 
-  // Price toppings from the trusted map; reject anything unrecognized.
+  // Price toppings from the trusted catalog; reject anything unrecognized.
   const toppings: { name: string; price_cents: number }[] = []
   let toppingCents = 0
   for (const t of item.toppings ?? []) {
-    const tc = TOPPING_CENTS[t?.name]
+    const tc = catalog.toppingCents[t?.name]
     if (tc === undefined) return { error: `Unknown topping: ${t?.name}` }
     toppings.push({ name: t.name, price_cents: tc })
     toppingCents += tc
@@ -132,16 +165,16 @@ function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: 
     const mix: { slug: string; name: string; qty: number }[] = []
     let count = 0
     for (const m of item.mix ?? []) {
-      const mixName = FLAVORS[m?.slug]
-      if (!mixName) return { error: `Unknown flavor in mix: ${m?.slug}` }
+      const flavor = catalog.flavors[m?.slug]
+      if (!flavor) return { error: `Unknown flavor in mix: ${m?.slug}` }
       const qty = Number(m?.qty ?? 0)
       if (!Number.isInteger(qty) || qty < 1) return { error: `Invalid mix quantity for ${m?.slug}` }
-      mix.push({ slug: m.slug, name: mixName, qty })
+      mix.push({ slug: m.slug, name: flavor.name, qty })
       count += qty
     }
     if (count !== 7) return { error: 'Mix & Match must total exactly 7 pouches.' }
 
-    const base = FORMAT_CENTS.mixmatch7
+    const base = catalog.formatCents['mixmatch7'] ?? FORMAT_CENTS_FALLBACK['mixmatch7']
     const lineCents = base + toppingCents
     return {
       cents: lineCents,
@@ -159,10 +192,13 @@ function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: 
   }
 
   // Single / 7-pack must reference a real flavor.
-  const flavorName = FLAVORS[item.slug]
-  if (!flavorName) return { error: `Unknown flavor: ${item.slug}` }
+  const flavor = catalog.flavors[item.slug]
+  if (!flavor) return { error: `Unknown flavor: ${item.slug}` }
 
-  const base = FORMAT_CENTS[format]
+  // Single is priced per-flavor; 7-pack uses the flat pack rate.
+  const base = format === 'single'
+    ? flavor.price_cents
+    : (catalog.formatCents[format] ?? FORMAT_CENTS_FALLBACK[format])
   if (base === undefined) return { error: `Unknown format: ${format}` }
 
   const lineCents = base + toppingCents
@@ -170,7 +206,7 @@ function priceItem(item: IncomingItem): { line: Record<string, unknown>; cents: 
     cents: lineCents,
     line: {
       slug: item.slug,
-      name: flavorName,
+      name: flavor.name,
       format,
       formatLabel: FORMAT_LABELS[format],
       base_cents: base,
@@ -203,22 +239,25 @@ Deno.serve(async (req) => {
     return err(400, 'Incomplete shipping details.')
   }
 
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
+
+  // Load the trusted catalog from the DB (falls back to constants on failure).
+  const catalog = await loadCatalog(supabase)
+
   // Recompute every line server-side.
   const orderItems: Record<string, unknown>[] = []
   let totalCents = 0
   for (const item of cartItems) {
-    const priced = priceItem(item)
+    const priced = priceItem(item, catalog)
     if ('error' in priced) return err(400, priced.error)
     orderItems.push(priced.line)
     totalCents += priced.cents
   }
 
   if (totalCents <= 0) return err(400, 'Order total must be greater than zero.')
-
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
 
   // Select Square credentials by environment.
   const env = (Deno.env.get('SQUARE_ENVIRONMENT') ?? 'sandbox') as 'sandbox' | 'production'
