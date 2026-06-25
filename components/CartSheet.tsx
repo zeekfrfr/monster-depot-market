@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useCart, FORMAT_LABELS, itemTotal, type CartItem } from '@/lib/cart'
 import { useCatalog } from '@/lib/catalogContext'
 import PaymentSheet from './PaymentSheet'
@@ -572,6 +573,21 @@ function Confirmation({
       >
         A confirmation has been sent to {email}.
       </p>
+
+      <Link
+        href={`/signup?order_id=${orderId}&email=${encodeURIComponent(email)}`}
+        onClick={onClose}
+        style={{
+          marginTop: 'var(--space-5)',
+          fontFamily: 'var(--font-dm-sans)',
+          fontWeight: 500,
+          fontSize: '14px',
+          color: 'var(--brand-purple-light)',
+          textDecoration: 'none',
+        }}
+      >
+        Create an account to track this order →
+      </Link>
 
       <button
         onClick={onClose}

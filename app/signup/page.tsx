@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
@@ -14,6 +14,16 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+
+  // Coming from an order confirmation: prefill the order's email (claim-order
+  // requires the account email to match the order) and carry the order id.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setOrderId(params.get('order_id'))
+    const e = params.get('email')
+    if (e) setEmail(e)
+  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +37,9 @@ export default function SignUpPage() {
     const { data, error: signUpErr } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/account` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/account${orderId ? `&order_id=${orderId}` : ''}`,
+      },
     })
     if (signUpErr) {
       setError(
@@ -38,8 +50,19 @@ export default function SignUpPage() {
       setLoading(false)
       return
     }
-    // Email confirmation off → session is live, go straight to orders.
+    // Email confirmation off → session is live. Claim the order (if any), then go.
     if (data.session) {
+      if (orderId) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/claim-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+            body: JSON.stringify({ orderId, marketingOptIn: false }),
+          })
+        } catch {
+          // Non-fatal — the account still works; order can be linked later.
+        }
+      }
       router.push('/account')
       return
     }

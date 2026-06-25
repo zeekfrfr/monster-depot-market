@@ -14,6 +14,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [signedIn, setSignedIn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -50,8 +51,26 @@ export default function Nav() {
     }
   }, [])
 
+  // Close the mobile menu whenever the route changes.
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
+
   const isLight = lightRoutes.includes(pathname)
   const textColor = scrolled ? '#fff' : isLight ? 'var(--text-primary)' : '#fff'
+
+  const panelLinkStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    minHeight: '44px',
+    padding: '8px 14px',
+    fontFamily: 'var(--font-syne)',
+    fontWeight: 700,
+    fontSize: '15px',
+    color: '#fff',
+    textDecoration: 'none',
+    borderRadius: 'var(--radius-md)',
+  }
 
   return (
     <header
@@ -88,7 +107,8 @@ export default function Nav() {
         Monster Depot
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
+        <div className="mdm-nav-desktop">
         <Link
           href="/recipes"
           style={{
@@ -158,6 +178,7 @@ export default function Nav() {
             <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
           </svg>
         </Link>
+        </div>
 
         <button
         type="button"
@@ -223,6 +244,64 @@ export default function Nav() {
           {count}
         </span>
       </button>
+
+        {/* Hamburger — mobile only */}
+        <button
+          type="button"
+          className="mdm-nav-toggle"
+          aria-label="Menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '44px',
+            minHeight: '44px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: textColor,
+            padding: 0,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            {menuOpen ? (
+              <>
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+              </>
+            ) : (
+              <>
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </>
+            )}
+          </svg>
+        </button>
+
+        {/* Mobile dropdown */}
+        <nav className={`mdm-nav-panel ${menuOpen ? 'open' : ''}`} aria-label="Menu">
+          <Link href="/recipes" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Recipes</Link>
+          {isAdmin && (
+            <Link href="/admin" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Admin</Link>
+          )}
+          <Link href={signedIn ? '/account' : '/login'} onClick={() => setMenuOpen(false)} style={panelLinkStyle}>
+            {signedIn ? 'Account' : 'Sign in'}
+          </Link>
+        </nav>
+
+        <style>{`
+          .mdm-nav-desktop { display: flex; align-items: center; gap: var(--space-2); }
+          .mdm-nav-toggle { display: none; }
+          .mdm-nav-panel { display: none; }
+          @media (max-width: 639px) {
+            .mdm-nav-desktop { display: none; }
+            .mdm-nav-toggle { display: inline-flex; }
+            .mdm-nav-panel { position: absolute; top: calc(100% + 10px); right: 0; flex-direction: column; min-width: 180px; padding: 8px; border-radius: var(--radius-lg); background: rgba(20,10,40,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+            .mdm-nav-panel.open { display: flex; }
+          }
+        `}</style>
       </div>
     </header>
   )
