@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 
 export default function LoginPage() {
@@ -153,25 +154,43 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <button
-          onClick={handleForgot}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '13px',
-            color: 'var(--text-secondary)',
-            textDecoration: 'underline',
-            textUnderlineOffset: '3px',
-            fontFamily: 'inherit',
-            minHeight: '44px',
-            padding: '11px 4px',
-            display: 'inline-flex',
-            alignItems: 'center',
-          }}
-        >
-          Forgot your password?
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <button
+            onClick={handleForgot}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+              fontFamily: 'inherit',
+              minHeight: '44px',
+              padding: '11px 4px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              alignSelf: 'flex-start',
+            }}
+          >
+            Forgot your password?
+          </button>
+          <Link
+            href="/signup"
+            style={{
+              fontSize: '14px',
+              color: 'var(--brand-purple-light)',
+              textDecoration: 'none',
+              fontWeight: 500,
+              minHeight: '44px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '0 4px',
+            }}
+          >
+            New here? Create an account →
+          </Link>
+        </div>
       </div>
     </main>
   )
