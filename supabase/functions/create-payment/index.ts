@@ -16,12 +16,12 @@ const SQUARE_BASE = {
 // below are a FALLBACK only — used if the DB is unreachable or a table is empty,
 // so a bad fetch can never take checkout down. Browser-supplied prices are always
 // ignored; every line is recomputed here.
-const FLAVORS_FALLBACK: Record<string, { name: string; price_cents: number }> = {
-  'peanut-butter-brownie-cookie': { name: 'Peanut Butter Brownie Cookie', price_cents: 899 },
-  'cardamom-coffee-cake': { name: 'Cardamom Coffee Cake', price_cents: 899 },
-  'volcano-cake': { name: 'Volcano Cake', price_cents: 899 },
-  'strawberry-swirl': { name: 'Strawberry Swirl', price_cents: 899 },
-  'honey-cinnamon-crumble': { name: 'Honey Cinnamon Crumble', price_cents: 899 },
+const FLAVORS_FALLBACK: Record<string, { name: string; price_cents: number; stock_status: string }> = {
+  'peanut-butter-brownie-cookie': { name: 'Peanut Butter Brownie Cookie', price_cents: 899, stock_status: 'in_stock' },
+  'cardamom-coffee-cake': { name: 'Cardamom Coffee Cake', price_cents: 899, stock_status: 'in_stock' },
+  'volcano-cake': { name: 'Volcano Cake', price_cents: 899, stock_status: 'in_stock' },
+  'strawberry-swirl': { name: 'Strawberry Swirl', price_cents: 899, stock_status: 'in_stock' },
+  'honey-cinnamon-crumble': { name: 'Honey Cinnamon Crumble', price_cents: 899, stock_status: 'in_stock' },
 }
 
 const FORMAT_CENTS_FALLBACK: Record<string, number> = {
@@ -48,7 +48,7 @@ const FORMAT_LABELS: Record<string, string> = {
 }
 
 interface Catalog {
-  flavors: Record<string, { name: string; price_cents: number }>
+  flavors: Record<string, { name: string; price_cents: number; stock_status: string }>
   toppingCents: Record<string, number>
   formatCents: Record<string, number>
 }
@@ -57,13 +57,13 @@ interface Catalog {
 async function loadCatalog(supabase: any): Promise<Catalog> {
   try {
     const [f, t, p] = await Promise.all([
-      supabase.from('mdm_flavors').select('slug,name,price_cents').eq('active', true),
+      supabase.from('mdm_flavors').select('slug,name,price_cents,stock_status').eq('active', true),
       supabase.from('mdm_toppings').select('name,price_cents').eq('active', true),
       supabase.from('mdm_pricing').select('format,price_cents'),
     ])
 
-    const flavors: Record<string, { name: string; price_cents: number }> = {}
-    for (const r of f.data ?? []) flavors[r.slug] = { name: r.name, price_cents: r.price_cents }
+    const flavors: Record<string, { name: string; price_cents: number; stock_status: string }> = {}
+    for (const r of f.data ?? []) flavors[r.slug] = { name: r.name, price_cents: r.price_cents, stock_status: r.stock_status ?? 'in_stock' }
 
     const toppingCents: Record<string, number> = {}
     for (const r of t.data ?? []) toppingCents[r.name] = r.price_cents
@@ -167,6 +167,7 @@ function priceItem(item: IncomingItem, catalog: Catalog): { line: Record<string,
     for (const m of item.mix ?? []) {
       const flavor = catalog.flavors[m?.slug]
       if (!flavor) return { error: `Unknown flavor in mix: ${m?.slug}` }
+      if (flavor.stock_status === 'sold_out') return { error: `${flavor.name} is sold out.` }
       const qty = Number(m?.qty ?? 0)
       if (!Number.isInteger(qty) || qty < 1) return { error: `Invalid mix quantity for ${m?.slug}` }
       mix.push({ slug: m.slug, name: flavor.name, qty })
@@ -191,9 +192,10 @@ function priceItem(item: IncomingItem, catalog: Catalog): { line: Record<string,
     }
   }
 
-  // Single / 7-pack must reference a real flavor.
+  // Single / 7-pack must reference a real, in-stock flavor.
   const flavor = catalog.flavors[item.slug]
   if (!flavor) return { error: `Unknown flavor: ${item.slug}` }
+  if (flavor.stock_status === 'sold_out') return { error: `${flavor.name} is sold out.` }
 
   // Single is priced per-flavor; 7-pack uses the flat pack rate.
   const base = format === 'single'

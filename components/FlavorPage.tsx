@@ -26,6 +26,7 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
   const isMonster = flavor.slug === 'monster-cookie'
   const catalog = useCatalog()
   const price = catalog?.flavorPrice[flavor.slug] ?? flavor.price
+  const soldOut = (catalog?.stock[flavor.slug] ?? 'in_stock') === 'sold_out'
 
   // Remove the entrance overlay once its bgExpand run completes (300ms).
   useEffect(() => {
@@ -225,14 +226,38 @@ export default function FlavorPage({ flavor }: FlavorPageProps) {
               </button>
 
               {/* Add to cart — solid accent. */}
-              <AddToCartButton
-                flavor={flavor}
-                label={`Add to cart  $${price.toFixed(2)}`}
-                style={{
-                  background: flavor.accent,
-                  color: '#FFFFFF',
-                }}
-              />
+              {soldOut ? (
+                <span
+                  aria-disabled="true"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'var(--font-syne)',
+                    fontWeight: 700,
+                    fontSize: '15px',
+                    lineHeight: 1.1,
+                    background: 'rgba(255,255,255,0.18)',
+                    color: flavor.text,
+                    borderRadius: 'var(--radius-full)',
+                    padding: '14px 28px',
+                    minHeight: 52,
+                    cursor: 'not-allowed',
+                    opacity: 0.7,
+                  }}
+                >
+                  Sold out
+                </span>
+              ) : (
+                <AddToCartButton
+                  flavor={flavor}
+                  label={`Add to cart  $${price.toFixed(2)}`}
+                  style={{
+                    background: flavor.accent,
+                    color: '#FFFFFF',
+                  }}
+                />
+              )}
             </div>
           </div>
         </section>

@@ -357,18 +357,22 @@ export default function ToppingsPopup({ flavor, onClose }: ToppingsPopupProps) {
                 marginBottom: 'var(--space-6)',
               }}
             >
-              {activeFlavors.map((f, i) => (
-                <MixRow
-                  key={f.slug}
-                  name={f.name}
-                  accent={f.accent}
-                  qty={mix[f.slug] ?? 0}
-                  onDec={() => bumpMix(f.slug, -1)}
-                  onInc={() => bumpMix(f.slug, 1)}
-                  incDisabled={mixCount >= MIX_TOTAL}
-                  divider={i < activeFlavors.length - 1}
-                />
-              ))}
+              {activeFlavors.map((f, i) => {
+                const fSoldOut = (catalog?.stock[f.slug] ?? 'in_stock') === 'sold_out'
+                return (
+                  <MixRow
+                    key={f.slug}
+                    name={f.name}
+                    accent={f.accent}
+                    qty={mix[f.slug] ?? 0}
+                    soldOut={fSoldOut}
+                    onDec={() => bumpMix(f.slug, -1)}
+                    onInc={() => bumpMix(f.slug, 1)}
+                    incDisabled={mixCount >= MIX_TOTAL}
+                    divider={i < activeFlavors.length - 1}
+                  />
+                )
+              })}
             </div>
           </>
         )}
@@ -587,6 +591,7 @@ function MixRow({
   onDec,
   onInc,
   incDisabled,
+  soldOut,
   divider,
 }: {
   name: string
@@ -595,6 +600,7 @@ function MixRow({
   onDec: () => void
   onInc: () => void
   incDisabled: boolean
+  soldOut?: boolean
   divider?: boolean
 }) {
   const stepStyle = (disabled: boolean): React.CSSProperties => ({
@@ -647,36 +653,44 @@ function MixRow({
         </span>
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
-        <button
-          type="button"
-          onClick={onDec}
-          disabled={qty === 0}
-          aria-label={`Remove one ${name}`}
-          style={stepStyle(qty === 0)}
-        >
-          −
-        </button>
-        <span
-          style={{
-            minWidth: 18,
-            textAlign: 'center',
-            fontFamily: 'var(--font-syne)',
-            fontWeight: 700,
-            fontSize: 15,
-            color: 'var(--text-primary)',
-          }}
-        >
-          {qty}
-        </span>
-        <button
-          type="button"
-          onClick={onInc}
-          disabled={incDisabled}
-          aria-label={`Add one ${name}`}
-          style={stepStyle(incDisabled)}
-        >
-          +
-        </button>
+        {soldOut ? (
+          <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)' }}>
+            Sold out
+          </span>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={onDec}
+              disabled={qty === 0}
+              aria-label={`Remove one ${name}`}
+              style={stepStyle(qty === 0)}
+            >
+              −
+            </button>
+            <span
+              style={{
+                minWidth: 18,
+                textAlign: 'center',
+                fontFamily: 'var(--font-syne)',
+                fontWeight: 700,
+                fontSize: 15,
+                color: 'var(--text-primary)',
+              }}
+            >
+              {qty}
+            </span>
+            <button
+              type="button"
+              onClick={onInc}
+              disabled={incDisabled}
+              aria-label={`Add one ${name}`}
+              style={stepStyle(incDisabled)}
+            >
+              +
+            </button>
+          </>
+        )}
       </span>
     </div>
   )

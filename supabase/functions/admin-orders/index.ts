@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     .maybeSingle()
   if (!adminRow) return json(403, { error: 'Not authorized.' })
 
-  let body: { action?: string; orderId?: string; status?: string; tracking_number?: string } = {}
+  let body: { action?: string; orderId?: string; status?: string; tracking_number?: string; slug?: string; stock_status?: string } = {}
   try {
     body = await req.json()
   } catch {
@@ -71,6 +71,29 @@ Deno.serve(async (req) => {
       patch.tracking_number = body.tracking_number.trim() || null
     }
     const { error } = await supabase.from('orders').update(patch).eq('id', body.orderId)
+    if (error) return json(500, { error: error.message })
+    return json(200, { ok: true })
+  }
+
+  if (body.action === 'listFlavors') {
+    const { data, error } = await supabase
+      .from('mdm_flavors')
+      .select('slug, name, stock_status, active')
+      .order('sort_order')
+    if (error) return json(500, { error: error.message })
+    return json(200, { flavors: data ?? [] })
+  }
+
+  if (body.action === 'setStock') {
+    const STOCK = ['in_stock', 'low_stock', 'sold_out']
+    if (!body.slug) return json(400, { error: 'Missing slug.' })
+    if (!body.stock_status || !STOCK.includes(body.stock_status)) {
+      return json(400, { error: 'Invalid stock status.' })
+    }
+    const { error } = await supabase
+      .from('mdm_flavors')
+      .update({ stock_status: body.stock_status })
+      .eq('slug', body.slug)
     if (error) return json(500, { error: error.message })
     return json(200, { ok: true })
   }

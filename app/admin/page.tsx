@@ -28,6 +28,13 @@ interface AdminOrder {
   items: OrderItem[]
 }
 
+interface AdminFlavor {
+  slug: string
+  name: string
+  stock_status: string
+  active: boolean
+}
+
 const STATUSES = ['pending', 'paid', 'packed', 'shipped', 'delivered', 'cancelled']
 const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/admin-orders`
 
@@ -40,6 +47,8 @@ export default function AdminPage() {
   const [token, setToken] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [flavors, setFlavors] = useState<AdminFlavor[]>([])
+  const [stockSavingSlug, setStockSavingSlug] = useState<string | null>(null)
 
   const callFn = useCallback(async (accessToken: string, body: object) => {
     const res = await fetch(FN_URL, {
@@ -64,7 +73,10 @@ export default function AdminPage() {
         router.replace('/login')
         return
       }
-      const r = await callFn(accessToken, { action: 'list' })
+      const [r, fr] = await Promise.all([
+        callFn(accessToken, { action: 'list' }),
+        callFn(accessToken, { action: 'listFlavors' }),
+      ])
       if (cancelled) return
       if (!r.ok) {
         setPhase('denied')
@@ -72,6 +84,7 @@ export default function AdminPage() {
       }
       setToken(accessToken)
       setOrders((r.data.orders as AdminOrder[]) ?? [])
+      setFlavors((fr.data?.flavors as AdminFlavor[]) ?? [])
       setDrafts(
         Object.fromEntries(
           ((r.data.orders as AdminOrder[]) ?? []).map((o) => [o.id, o.tracking_number ?? '']),
@@ -101,6 +114,16 @@ export default function AdminPage() {
       )
     }
     setSavingId(null)
+  }
+
+  const setStock = async (slug: string, stock_status: string) => {
+    if (!token) return
+    setStockSavingSlug(slug)
+    const r = await callFn(token, { action: 'setStock', slug, stock_status })
+    if (r.ok) {
+      setFlavors((prev) => prev.map((f) => (f.slug === slug ? { ...f, stock_status } : f)))
+    }
+    setStockSavingSlug(null)
   }
 
   if (phase === 'loading') {
@@ -140,6 +163,45 @@ export default function AdminPage() {
           <SummaryCard label="Revenue" value={`$${(revenueCents / 100).toFixed(2)}`} />
           <SummaryCard label="To fulfill" value={String(toFulfill)} />
         </div>
+
+        {flavors.length > 0 && (
+          <div style={{ marginBottom: 40 }}>
+            <h2 style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 18, color: 'var(--text-primary)', margin: '0 0 12px' }}>Stock</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {flavors.map((f) => (
+                <div key={f.slug} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid #E5E5E5', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500, fontSize: 14, color: 'var(--text-primary)' }}>{f.name}</span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {([['in_stock', 'In stock'], ['low_stock', 'Low'], ['sold_out', 'Sold out']] as const).map(([val, label]) => {
+                      const on = f.stock_status === val
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          disabled={stockSavingSlug === f.slug}
+                          onClick={() => setStock(f.slug, val)}
+                          style={{
+                            fontFamily: 'var(--font-dm-sans)',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            padding: '6px 12px',
+                            borderRadius: 'var(--radius-full)',
+                            cursor: 'pointer',
+                            border: on ? '1px solid var(--brand-purple-light)' : '1px solid #E5E5E5',
+                            background: on ? 'var(--brand-purple-light)' : 'transparent',
+                            color: on ? '#fff' : 'var(--text-secondary)',
+                          }}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--text-secondary)' }}>No orders yet.</p>

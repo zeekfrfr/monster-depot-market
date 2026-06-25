@@ -15,6 +15,8 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
   const catalog = useCatalog()
   const price = catalog?.flavorPrice[flavor.slug] ?? flavor.price
   const sevenPack = catalog?.sevenPack ?? flavor.sevenPackPrice
+  const stock = catalog?.stock[flavor.slug] ?? 'in_stock'
+  const soldOut = stock === 'sold_out'
 
   const nameStyle: React.CSSProperties = {
     fontFamily: 'var(--font-syne)',
@@ -105,6 +107,26 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
           {`$${price.toFixed(2)} · 7-pack $${sevenPack.toFixed(2)}`}
         </p>
 
+        {stock !== 'in_stock' && (
+          <span
+            style={{
+              marginTop: '12px',
+              display: 'inline-block',
+              fontFamily: 'var(--font-dm-sans)',
+              fontWeight: 600,
+              fontSize: '12px',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              color: flavor.text,
+              border: `1px solid ${flavor.text}`,
+              borderRadius: 'var(--radius-full)',
+              padding: '3px 12px',
+            }}
+          >
+            {soldOut ? 'Sold out' : 'Low stock'}
+          </span>
+        )}
+
         <div
           className="flavor-card-cta"
           style={{
@@ -115,15 +137,39 @@ export default function FlavorCard({ flavor }: FlavorCardProps) {
             marginTop: 'var(--space-6)',
           }}
         >
-          <AddToCartButton
-            flavor={flavor}
-            label="Add to cart"
-            style={{
-              background: flavor.accent,
-              color: '#FFFFFF',
-              fontSize: '15px',
-            }}
-          />
+          {soldOut ? (
+            <span
+              aria-disabled="true"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: 'var(--font-syne)',
+                fontWeight: 700,
+                fontSize: '15px',
+                lineHeight: 1.1,
+                background: 'rgba(255,255,255,0.18)',
+                color: flavor.text,
+                borderRadius: 'var(--radius-full)',
+                padding: '14px 32px',
+                minHeight: 52,
+                cursor: 'not-allowed',
+                opacity: 0.7,
+              }}
+            >
+              Sold out
+            </span>
+          ) : (
+            <AddToCartButton
+              flavor={flavor}
+              label="Add to cart"
+              style={{
+                background: flavor.accent,
+                color: '#FFFFFF',
+                fontSize: '15px',
+              }}
+            />
+          )}
           <Link
             href={`/${flavor.slug}`}
             aria-label={`Explore ${flavor.name}`}

@@ -10,6 +10,8 @@ export interface CatalogTopping {
 export interface Catalog {
   // slug -> single-pouch price in dollars (active flavors only)
   flavorPrice: Record<string, number>
+  // slug -> 'in_stock' | 'low_stock' | 'sold_out'
+  stock: Record<string, string>
   sevenPack: number | null
   mixMatch: number | null
   weeklySub: number | null
@@ -21,6 +23,7 @@ export interface Catalog {
 // for any field that's missing here, so an empty catalog never breaks the UI.
 export const EMPTY_CATALOG: Catalog = {
   flavorPrice: {},
+  stock: {},
   sevenPack: null,
   mixMatch: null,
   weeklySub: null,
@@ -48,8 +51,8 @@ async function restGet<T>(query: string): Promise<T[]> {
 
 export async function getCatalog(): Promise<Catalog> {
   const [flavors, toppings, pricing] = await Promise.all([
-    restGet<{ slug: string; price_cents: number }>(
-      'mdm_flavors?select=slug,price_cents&active=eq.true',
+    restGet<{ slug: string; price_cents: number; stock_status: string }>(
+      'mdm_flavors?select=slug,price_cents,stock_status&active=eq.true',
     ),
     restGet<{ name: string; price_cents: number }>(
       'mdm_toppings?select=name,price_cents&active=eq.true&order=sort_order.asc',
@@ -58,13 +61,18 @@ export async function getCatalog(): Promise<Catalog> {
   ])
 
   const flavorPrice: Record<string, number> = {}
-  for (const f of flavors) flavorPrice[f.slug] = f.price_cents / 100
+  const stock: Record<string, string> = {}
+  for (const f of flavors) {
+    flavorPrice[f.slug] = f.price_cents / 100
+    stock[f.slug] = f.stock_status ?? 'in_stock'
+  }
 
   const fmt: Record<string, number> = {}
   for (const p of pricing) fmt[p.format] = p.price_cents / 100
 
   return {
     flavorPrice,
+    stock,
     sevenPack: fmt['7pack'] ?? null,
     mixMatch: fmt['mixmatch7'] ?? null,
     weeklySub: fmt['weekly-sub'] ?? null,
