@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useCart } from '@/lib/cart'
+import { activeFlavors } from '@/lib/products'
 import { getSupabase } from '@/lib/supabase'
-
-const lightRoutes = ['/refunds', '/shipping', '/privacy', '/terms', '/cart']
 
 export default function Nav() {
   const pathname = usePathname()
@@ -56,8 +55,16 @@ export default function Nav() {
     setMenuOpen(false)
   }, [pathname])
 
-  const isLight = lightRoutes.includes(pathname)
-  const textColor = scrolled ? '#fff' : isLight ? 'var(--text-primary)' : '#fff'
+  // White nav text only on pages with a dark/colored hero; dark text everywhere
+  // else so it's readable on white backgrounds without needing to scroll.
+  const flavor = activeFlavors.find((f) => pathname === `/${f.slug}`)
+  const darkHero =
+    pathname === '/' ||
+    pathname === '/lift' ||
+    pathname === '/subscribe' ||
+    pathname.startsWith('/recipes/') ||
+    (!!flavor && flavor.text === '#FFFFFF')
+  const textColor = scrolled ? '#fff' : darkHero ? '#fff' : 'var(--text-primary)'
 
   const panelLinkStyle: React.CSSProperties = {
     display: 'flex',
@@ -70,6 +77,22 @@ export default function Nav() {
     color: '#fff',
     textDecoration: 'none',
     borderRadius: 'var(--radius-md)',
+  }
+
+  const desktopLinkStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '40px',
+    padding: '0 var(--space-3)',
+    fontFamily: 'var(--font-syne)',
+    fontWeight: 700,
+    fontSize: '15px',
+    color: textColor,
+    textDecoration: 'none',
+    letterSpacing: '-0.01em',
+    whiteSpace: 'nowrap',
+    transition: 'color var(--dur-base) var(--ease-out)',
   }
 
   return (
@@ -109,46 +132,14 @@ export default function Nav() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
         <div className="mdm-nav-desktop">
-        <Link
-          href="/recipes"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '40px',
-            padding: '0 var(--space-2)',
-            fontFamily: 'var(--font-syne)',
-            fontWeight: 700,
-            fontSize: '15px',
-            color: textColor,
-            textDecoration: 'none',
-            letterSpacing: '-0.01em',
-            transition: 'color var(--dur-base) var(--ease-out)',
-          }}
-        >
-          Recipes
-        </Link>
-        {isAdmin && (
-          <Link
-            href="/admin"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '40px',
-              padding: '0 var(--space-2)',
-              fontFamily: 'var(--font-syne)',
-              fontWeight: 700,
-              fontSize: '15px',
-              color: textColor,
-              textDecoration: 'none',
-              letterSpacing: '-0.01em',
-              transition: 'color var(--dur-base) var(--ease-out)',
-            }}
-          >
-            Admin
-          </Link>
-        )}
+          <Link href="/#flavor-worlds" style={desktopLinkStyle}>Dessert Pouches</Link>
+          <Link href="/lift" style={desktopLinkStyle}>LIFT Drinks</Link>
+          <Link href="/recipes" style={desktopLinkStyle}>Recipes</Link>
+          {isAdmin && <Link href="/admin" style={desktopLinkStyle}>Admin</Link>}
+          {!signedIn && <Link href="/login" style={desktopLinkStyle}>Sign in</Link>}
+        </div>
+
+        {/* Account — persistent icon, sits next to the cart */}
         <Link
           href={signedIn ? '/account' : '/login'}
           aria-label={signedIn ? 'Your account' : 'Sign in'}
@@ -157,7 +148,7 @@ export default function Nav() {
             alignItems: 'center',
             justifyContent: 'center',
             minWidth: '40px',
-            minHeight: '40px',
+            minHeight: '44px',
             color: textColor,
             transition: 'color var(--dur-base) var(--ease-out)',
           }}
@@ -178,7 +169,6 @@ export default function Nav() {
             <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
           </svg>
         </Link>
-        </div>
 
         <button
         type="button"
@@ -282,20 +272,22 @@ export default function Nav() {
 
         {/* Mobile dropdown */}
         <nav className={`mdm-nav-panel ${menuOpen ? 'open' : ''}`} aria-label="Menu">
+          <Link href="/#flavor-worlds" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Dessert Pouches</Link>
+          <Link href="/lift" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>LIFT Drinks</Link>
           <Link href="/recipes" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Recipes</Link>
           {isAdmin && (
             <Link href="/admin" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Admin</Link>
           )}
-          <Link href={signedIn ? '/account' : '/login'} onClick={() => setMenuOpen(false)} style={panelLinkStyle}>
-            {signedIn ? 'Account' : 'Sign in'}
-          </Link>
+          {!signedIn && (
+            <Link href="/login" onClick={() => setMenuOpen(false)} style={panelLinkStyle}>Sign in</Link>
+          )}
         </nav>
 
         <style>{`
           .mdm-nav-desktop { display: flex; align-items: center; gap: var(--space-2); }
           .mdm-nav-toggle { display: none; }
           .mdm-nav-panel { display: none; }
-          @media (max-width: 639px) {
+          @media (max-width: 819px) {
             .mdm-nav-desktop { display: none; }
             .mdm-nav-toggle { display: inline-flex; }
             .mdm-nav-panel { position: absolute; top: calc(100% + 10px); right: 0; flex-direction: column; min-width: 180px; padding: 8px; border-radius: var(--radius-lg); background: rgba(20,10,40,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }

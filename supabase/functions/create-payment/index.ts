@@ -45,21 +45,32 @@ const FORMAT_LABELS: Record<string, string> = {
   '7pack': '7-pack',
   mixmatch7: 'Mix & Match 7-pack',
   'weekly-sub': 'Weekly subscription',
+  lift: 'LIFT',
+}
+
+const LIFT_FALLBACK: Record<string, { name: string; price_cents: number; stock_status: string }> = {
+  'strawberry-daiquiri': { name: 'Strawberry Daiquiri', price_cents: 1000, stock_status: 'in_stock' },
+  'watermelon-margarita': { name: 'Watermelon Margarita', price_cents: 1000, stock_status: 'in_stock' },
+  'berry-mojito': { name: 'Berry Mojito', price_cents: 1000, stock_status: 'in_stock' },
+  'long-island': { name: 'Long Island', price_cents: 1000, stock_status: 'in_stock' },
+  'jungle-juice': { name: 'Jungle Juice', price_cents: 1000, stock_status: 'in_stock' },
 }
 
 interface Catalog {
   flavors: Record<string, { name: string; price_cents: number; stock_status: string }>
   toppingCents: Record<string, number>
   formatCents: Record<string, number>
+  liftFlavors: Record<string, { name: string; price_cents: number; stock_status: string }>
 }
 
 // deno-lint-ignore no-explicit-any
 async function loadCatalog(supabase: any): Promise<Catalog> {
   try {
-    const [f, t, p] = await Promise.all([
+    const [f, t, p, lf] = await Promise.all([
       supabase.from('mdm_flavors').select('slug,name,price_cents,stock_status').eq('active', true),
       supabase.from('mdm_toppings').select('name,price_cents').eq('active', true),
       supabase.from('mdm_pricing').select('format,price_cents'),
+      supabase.from('mdm_lift_flavors').select('slug,name,price_cents,stock_status').eq('active', true),
     ])
 
     const flavors: Record<string, { name: string; price_cents: number; stock_status: string }> = {}
@@ -71,17 +82,22 @@ async function loadCatalog(supabase: any): Promise<Catalog> {
     const formatCents: Record<string, number> = {}
     for (const r of p.data ?? []) formatCents[r.format] = r.price_cents
 
+    const liftFlavors: Record<string, { name: string; price_cents: number; stock_status: string }> = {}
+    for (const r of lf.data ?? []) liftFlavors[r.slug] = { name: r.name, price_cents: r.price_cents, stock_status: r.stock_status ?? 'in_stock' }
+
     // Fall back per-map if a table came back empty (misconfig / fetch issue).
     return {
       flavors: Object.keys(flavors).length ? flavors : FLAVORS_FALLBACK,
       toppingCents: Object.keys(toppingCents).length ? toppingCents : TOPPING_CENTS_FALLBACK,
       formatCents: Object.keys(formatCents).length ? formatCents : FORMAT_CENTS_FALLBACK,
+      liftFlavors: Object.keys(liftFlavors).length ? liftFlavors : LIFT_FALLBACK,
     }
   } catch (_e) {
     return {
       flavors: FLAVORS_FALLBACK,
       toppingCents: TOPPING_CENTS_FALLBACK,
       formatCents: FORMAT_CENTS_FALLBACK,
+      liftFlavors: LIFT_FALLBACK,
     }
   }
 }
@@ -186,6 +202,38 @@ function priceItem(item: IncomingItem, catalog: Catalog): { line: Record<string,
         formatLabel: FORMAT_LABELS[format],
         base_cents: base,
         mix,
+        toppings,
+        line_cents: lineCents,
+      },
+    }
+  }
+
+  // LIFT — RTD cans. Any blend of active, in-stock LIFT flavors totaling >= 3.
+  if (format === 'lift') {
+    const cans: { slug: string; name: string; qty: number }[] = []
+    let count = 0
+    let centsTotal = 0
+    for (const m of item.mix ?? []) {
+      const lf = catalog.liftFlavors[m?.slug]
+      if (!lf) return { error: `Unknown LIFT flavor: ${m?.slug}` }
+      if (lf.stock_status === 'sold_out') return { error: `${lf.name} is sold out.` }
+      const qty = Number(m?.qty ?? 0)
+      if (!Number.isInteger(qty) || qty < 1) return { error: `Invalid quantity for ${m?.slug}` }
+      cans.push({ slug: m.slug, name: lf.name, qty })
+      count += qty
+      centsTotal += qty * lf.price_cents
+    }
+    if (count < 3) return { error: 'LIFT orders require at least 3 cans.' }
+    const lineCents = centsTotal + toppingCents
+    return {
+      cents: lineCents,
+      line: {
+        slug: 'lift',
+        name: 'LIFT',
+        format,
+        formatLabel: FORMAT_LABELS[format],
+        base_cents: centsTotal,
+        mix: cans,
         toppings,
         line_cents: lineCents,
       },

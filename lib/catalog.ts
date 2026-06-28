@@ -7,6 +7,13 @@ export interface CatalogTopping {
   price: number
 }
 
+export interface CatalogLift {
+  slug: string
+  name: string
+  price: number
+  stock: string
+}
+
 export interface Catalog {
   // slug -> single-pouch price in dollars (active flavors only)
   flavorPrice: Record<string, number>
@@ -17,6 +24,7 @@ export interface Catalog {
   weeklySub: number | null
   shipping: number | null
   toppings: CatalogTopping[]
+  lift: CatalogLift[]
 }
 
 // Safe fallback: every consumer falls back to the static lib/products.ts values
@@ -29,6 +37,7 @@ export const EMPTY_CATALOG: Catalog = {
   weeklySub: null,
   shipping: null,
   toppings: [],
+  lift: [],
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -50,7 +59,7 @@ async function restGet<T>(query: string): Promise<T[]> {
 }
 
 export async function getCatalog(): Promise<Catalog> {
-  const [flavors, toppings, pricing] = await Promise.all([
+  const [flavors, toppings, pricing, lift] = await Promise.all([
     restGet<{ slug: string; price_cents: number; stock_status: string }>(
       'mdm_flavors?select=slug,price_cents,stock_status&active=eq.true',
     ),
@@ -58,6 +67,9 @@ export async function getCatalog(): Promise<Catalog> {
       'mdm_toppings?select=name,price_cents&active=eq.true&order=sort_order.asc',
     ),
     restGet<{ format: string; price_cents: number }>('mdm_pricing?select=format,price_cents'),
+    restGet<{ slug: string; name: string; price_cents: number; stock_status: string }>(
+      'mdm_lift_flavors?select=slug,name,price_cents,stock_status&active=eq.true&order=sort_order.asc',
+    ),
   ])
 
   const flavorPrice: Record<string, number> = {}
@@ -78,5 +90,6 @@ export async function getCatalog(): Promise<Catalog> {
     weeklySub: fmt['weekly-sub'] ?? null,
     shipping: fmt['shipping'] ?? null,
     toppings: toppings.map((t) => ({ name: t.name, price: t.price_cents / 100 })),
+    lift: lift.map((l) => ({ slug: l.slug, name: l.name, price: l.price_cents / 100, stock: l.stock_status ?? 'in_stock' })),
   }
 }

@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react'
 
-export type CartFormat = 'single' | '7pack' | 'mixmatch7' | 'weekly-sub'
+export type CartFormat = 'single' | '7pack' | 'mixmatch7' | 'weekly-sub' | 'lift'
 
 export interface CartTopping {
   name: string
@@ -40,6 +40,7 @@ export const FORMAT_LABELS: Record<CartFormat, string> = {
   '7pack': '7-pack',
   mixmatch7: 'Mix & Match 7-pack',
   'weekly-sub': 'Weekly subscription',
+  lift: 'LIFT',
 }
 
 export function itemTotal(item: CartItem): number {
