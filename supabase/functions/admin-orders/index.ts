@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     .maybeSingle()
   if (!adminRow) return json(403, { error: 'Not authorized.' })
 
-  let body: { action?: string; orderId?: string; status?: string; tracking_number?: string; slug?: string; stock_status?: string } = {}
+  let body: { action?: string; orderId?: string; status?: string; tracking_number?: string; slug?: string; stock_status?: string; kind?: string; active?: boolean } = {}
   try {
     body = await req.json()
   } catch {
@@ -86,16 +86,45 @@ Deno.serve(async (req) => {
 
   if (body.action === 'setStock') {
     const STOCK = ['in_stock', 'low_stock', 'sold_out']
+    const table = body.kind === 'lift' ? 'mdm_lift_flavors' : 'mdm_flavors'
     if (!body.slug) return json(400, { error: 'Missing slug.' })
     if (!body.stock_status || !STOCK.includes(body.stock_status)) {
       return json(400, { error: 'Invalid stock status.' })
     }
     const { error } = await supabase
-      .from('mdm_flavors')
+      .from(table)
       .update({ stock_status: body.stock_status })
       .eq('slug', body.slug)
     if (error) return json(500, { error: error.message })
     return json(200, { ok: true })
+  }
+
+  if (body.action === 'listLiftFlavors') {
+    const { data, error } = await supabase
+      .from('mdm_lift_flavors')
+      .select('slug, name, stock_status, active')
+      .order('sort_order')
+    if (error) return json(500, { error: error.message })
+    return json(200, { lift: data ?? [] })
+  }
+
+  if (body.action === 'setActive') {
+    const table = body.kind === 'lift' ? 'mdm_lift_flavors' : 'mdm_flavors'
+    if (!body.slug) return json(400, { error: 'Missing slug.' })
+    if (typeof body.active !== 'boolean') return json(400, { error: 'Missing active flag.' })
+    const { error } = await supabase.from(table).update({ active: body.active }).eq('slug', body.slug)
+    if (error) return json(500, { error: error.message })
+    return json(200, { ok: true })
+  }
+
+  if (body.action === 'listProfiles') {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, marketing_opt_in, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1000)
+    if (error) return json(500, { error: error.message })
+    return json(200, { profiles: data ?? [] })
   }
 
   return json(400, { error: 'Unknown action.' })

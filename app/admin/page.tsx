@@ -35,6 +35,16 @@ interface AdminFlavor {
   active: boolean
 }
 
+interface AdminProfile {
+  id: string
+  email: string | null
+  full_name: string | null
+  marketing_opt_in: boolean | null
+  created_at: string
+}
+
+type ProductKind = 'pouch' | 'lift'
+
 const STATUSES = ['pending', 'paid', 'packed', 'shipped', 'delivered', 'cancelled']
 const FN_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/admin-orders`
 
@@ -48,7 +58,10 @@ export default function AdminPage() {
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
   const [flavors, setFlavors] = useState<AdminFlavor[]>([])
-  const [stockSavingSlug, setStockSavingSlug] = useState<string | null>(null)
+  const [liftFlavors, setLiftFlavors] = useState<AdminFlavor[]>([])
+  const [profiles, setProfiles] = useState<AdminProfile[]>([])
+  // Busy key while a product row saves: `${kind}:${slug}`.
+  const [productBusy, setProductBusy] = useState<string | null>(null)
 
   const callFn = useCallback(async (accessToken: string, body: object) => {
     const res = await fetch(FN_URL, {
@@ -73,9 +86,11 @@ export default function AdminPage() {
         router.replace('/login')
         return
       }
-      const [r, fr] = await Promise.all([
+      const [r, fr, lr, pr] = await Promise.all([
         callFn(accessToken, { action: 'list' }),
         callFn(accessToken, { action: 'listFlavors' }),
+        callFn(accessToken, { action: 'listLiftFlavors' }),
+        callFn(accessToken, { action: 'listProfiles' }),
       ])
       if (cancelled) return
       if (!r.ok) {
@@ -85,6 +100,8 @@ export default function AdminPage() {
       setToken(accessToken)
       setOrders((r.data.orders as AdminOrder[]) ?? [])
       setFlavors((fr.data?.flavors as AdminFlavor[]) ?? [])
+      setLiftFlavors((lr.data?.lift as AdminFlavor[]) ?? [])
+      setProfiles((pr.data?.profiles as AdminProfile[]) ?? [])
       setDrafts(
         Object.fromEntries(
           ((r.data.orders as AdminOrder[]) ?? []).map((o) => [o.id, o.tracking_number ?? '']),
@@ -116,14 +133,67 @@ export default function AdminPage() {
     setSavingId(null)
   }
 
-  const setStock = async (slug: string, stock_status: string) => {
+  const setStock = async (slug: string, kind: ProductKind, stock_status: string) => {
     if (!token) return
-    setStockSavingSlug(slug)
-    const r = await callFn(token, { action: 'setStock', slug, stock_status })
+    setProductBusy(`${kind}:${slug}`)
+    const r = await callFn(token, { action: 'setStock', slug, kind, stock_status })
     if (r.ok) {
-      setFlavors((prev) => prev.map((f) => (f.slug === slug ? { ...f, stock_status } : f)))
+      const upd = (prev: AdminFlavor[]) => prev.map((f) => (f.slug === slug ? { ...f, stock_status } : f))
+      if (kind === 'lift') setLiftFlavors(upd)
+      else setFlavors(upd)
     }
-    setStockSavingSlug(null)
+    setProductBusy(null)
+  }
+
+  const setActive = async (slug: string, kind: ProductKind, active: boolean) => {
+    if (!token) return
+    setProductBusy(`${kind}:${slug}`)
+    const r = await callFn(token, { action: 'setActive', slug, kind, active })
+    if (r.ok) {
+      const upd = (prev: AdminFlavor[]) => prev.map((f) => (f.slug === slug ? { ...f, active } : f))
+      if (kind === 'lift') setLiftFlavors(upd)
+      else setFlavors(upd)
+    }
+    setProductBusy(null)
+  }
+
+  const productRow = (f: AdminFlavor, kind: ProductKind) => {
+    const busy = productBusy === `${kind}:${f.slug}`
+    return (
+      <div
+        key={f.slug}
+        style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid #E5E5E5', borderRadius: 'var(--radius-md)', padding: '10px 14px', opacity: f.active ? 1 : 0.62 }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setActive(f.slug, kind, !f.active)}
+            title={f.active ? 'Live on the site — click to hide' : 'Hidden — click to make live'}
+            style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, fontWeight: 600, padding: '5px 11px', borderRadius: 'var(--radius-full)', cursor: 'pointer', border: '1px solid', borderColor: f.active ? '#1B9E5A' : '#CBA800', background: f.active ? '#E6F7EC' : '#FFF7DB', color: f.active ? '#137A43' : '#8A6D00' }}
+          >
+            {f.active ? 'Active' : 'Inactive'}
+          </button>
+          <span style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500, fontSize: 14, color: 'var(--text-primary)' }}>{f.name}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {([['in_stock', 'In stock'], ['low_stock', 'Low'], ['sold_out', 'Sold out']] as const).map(([val, label]) => {
+            const on = f.stock_status === val
+            return (
+              <button
+                key={val}
+                type="button"
+                disabled={busy}
+                onClick={() => setStock(f.slug, kind, val)}
+                style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 'var(--radius-full)', cursor: 'pointer', border: on ? '1px solid var(--brand-purple-light)' : '1px solid #E5E5E5', background: on ? 'var(--brand-purple-light)' : 'transparent', color: on ? '#fff' : 'var(--text-secondary)' }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
   }
 
   if (phase === 'loading') {
@@ -150,11 +220,14 @@ export default function AdminPage() {
     .reduce((s, o) => s + (o.total ?? 0), 0)
   const toFulfill = orders.filter((o) => o.status === 'paid' || o.status === 'packed').length
 
+  const sectionHeading: React.CSSProperties = { fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 18, color: 'var(--text-primary)', margin: '0 0 12px' }
+  const subHeading: React.CSSProperties = { fontFamily: 'var(--font-dm-sans)', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-tertiary)', margin: '0 0 8px' }
+
   return (
     <main style={{ minHeight: '100svh', background: 'var(--surface-white)' }}>
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '120px var(--space-6) 96px' }}>
         <h1 style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 28, letterSpacing: '-0.02em', color: 'var(--text-primary)', margin: '0 0 24px' }}>
-          Orders
+          Admin
         </h1>
 
         {/* Summary */}
@@ -162,47 +235,66 @@ export default function AdminPage() {
           <SummaryCard label="Orders" value={String(orders.length)} />
           <SummaryCard label="Revenue" value={`$${(revenueCents / 100).toFixed(2)}`} />
           <SummaryCard label="To fulfill" value={String(toFulfill)} />
+          <SummaryCard label="Customers" value={String(profiles.length)} />
         </div>
 
-        {flavors.length > 0 && (
+        {/* Products — active toggle + stock for pouches and LIFT */}
+        {(flavors.length > 0 || liftFlavors.length > 0) && (
           <div style={{ marginBottom: 40 }}>
-            <h2 style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 18, color: 'var(--text-primary)', margin: '0 0 12px' }}>Stock</h2>
+            <h2 style={sectionHeading}>Products</h2>
+            {flavors.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={subHeading}>Dessert Pouches</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {flavors.map((f) => productRow(f, 'pouch'))}
+                </div>
+              </div>
+            )}
+            {liftFlavors.length > 0 && (
+              <div>
+                <p style={subHeading}>LIFT</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {liftFlavors.map((f) => productRow(f, 'lift'))}
+                </div>
+              </div>
+            )}
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
+              Inactive products are hidden from the storefront and can&apos;t be ordered. Stock changes show as badges on the site.
+            </p>
+          </div>
+        )}
+
+        {/* Customers */}
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={sectionHeading}>
+            Customers <span style={{ color: 'var(--text-tertiary)', fontWeight: 400, fontSize: 14 }}>({profiles.length})</span>
+          </h2>
+          {profiles.length === 0 ? (
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>No customer accounts yet.</p>
+          ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {flavors.map((f) => (
-                <div key={f.slug} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid #E5E5E5', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
-                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500, fontSize: 14, color: 'var(--text-primary)' }}>{f.name}</span>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {([['in_stock', 'In stock'], ['low_stock', 'Low'], ['sold_out', 'Sold out']] as const).map(([val, label]) => {
-                      const on = f.stock_status === val
-                      return (
-                        <button
-                          key={val}
-                          type="button"
-                          disabled={stockSavingSlug === f.slug}
-                          onClick={() => setStock(f.slug, val)}
-                          style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            fontSize: 12,
-                            fontWeight: 500,
-                            padding: '6px 12px',
-                            borderRadius: 'var(--radius-full)',
-                            cursor: 'pointer',
-                            border: on ? '1px solid var(--brand-purple-light)' : '1px solid #E5E5E5',
-                            background: on ? 'var(--brand-purple-light)' : 'transparent',
-                            color: on ? '#fff' : 'var(--text-secondary)',
-                          }}
-                        >
-                          {label}
-                        </button>
-                      )
-                    })}
+              {profiles.map((p) => (
+                <div key={p.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px solid #E5E5E5', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 500, fontSize: 14, color: 'var(--text-primary)', margin: '0 0 2px' }}>{p.full_name || '—'}</p>
+                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-all' }}>{p.email}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    {p.marketing_opt_in && (
+                      <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 'var(--radius-full)', background: '#EEE9F8', color: 'var(--brand-purple-dark)' }}>Email opt-in</span>
+                    )}
+                    <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                      {new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
+        {/* Orders */}
+        <h2 style={sectionHeading}>Orders</h2>
         {orders.length === 0 ? (
           <p style={{ fontFamily: 'var(--font-dm-sans)', color: 'var(--text-secondary)' }}>No orders yet.</p>
         ) : (
