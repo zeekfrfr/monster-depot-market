@@ -84,5 +84,3 @@ export const LIFT_FLAVORS: LiftFlavor[] = [
 
 export const LIFT_PRICE = 10 // $/can, fallback if catalog is unavailable
 export const LIFT_MIN_CANS = 3 // minimum order
-export const LIFT_INGREDIENTS_DISCLAIMER =
-  'Ingredients subject to change. Full nutrition information coming soon.'

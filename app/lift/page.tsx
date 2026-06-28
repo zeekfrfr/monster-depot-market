@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useCart, type CartMixEntry } from '@/lib/cart'
 import { useCatalog } from '@/lib/catalogContext'
-import { LIFT_FLAVORS, LIFT_PRICE, LIFT_MIN_CANS, LIFT_INGREDIENTS_DISCLAIMER } from '@/lib/lift'
+import { LIFT_FLAVORS, LIFT_PRICE, LIFT_MIN_CANS } from '@/lib/lift'
 
 export default function LiftPage() {
   const { addItem, openCart } = useCart()
@@ -171,9 +171,6 @@ export default function LiftPage() {
                     <div style={{ marginTop: 8 }}>
                       <p style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 300, fontSize: 12, lineHeight: 1.55, color: '#2A2A2A', margin: 0 }}>
                         {c.ingredients.join(', ')}.
-                      </p>
-                      <p style={{ fontFamily: 'var(--font-dm-sans)', fontWeight: 300, fontSize: 11, lineHeight: 1.5, color: '#2A2A2A', opacity: 0.6, margin: '8px 0 0' }}>
-                        {LIFT_INGREDIENTS_DISCLAIMER}
                       </p>
                     </div>
                   )}
